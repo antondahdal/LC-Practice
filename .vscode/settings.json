@@ -1,0 +1,24 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.test.defaultConfig": "default",
+  "java.test.config": {
+    "default": {
+      "workingDirectory": "${workspaceFolder}"
+    }
+  },
+  "editor.inlineSuggest.enabled": false,
+  "editor.quickSuggestions": {
+    "other": false,
+    "comments": false,
+    "strings": false
+  },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.wordBasedSuggestions": "off",
+  "editor.parameterHints.enabled": false,
+  "editor.hover.enabled": true,
+  "github.copilot.enable": {
+    "*": false
+  },
+  "java.completion.enabled": true,
+  "cursor.cpp.disabledLanguages": ["java"]
+}
