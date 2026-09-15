@@ -1,0 +1,28 @@
+---
+description: Read what is already done before you ask a question. Do not repeat a talk he already gave.
+alwaysApply: true
+---
+
+# Check before you ask
+
+Before you give a Cover, an LC-SD question, or “next is X”, read what is already done.
+
+Look at, in this order:
+
+1. This week’s notes in the notes repo (`week-NN.md`)
+2. Extra notes in this repo (`notes/week-NN-day-*.md`)
+3. `part1-map.md` and `lc-sd-map.md` Done rows
+
+If he already answered that product this week, **do not ask it again**. That includes Part 3 yesterday. Auth on Monday Part 3 means you do not run Chapter 13 login-to-Book on Tuesday as if it were new.
+
+If the map lists two things (example: Ch 13 **plus** cache extra), say which piece is already done and which piece is actually leftover. Then ask only the leftover. Or skip, if he says leave it.
+
+## Bad
+
+Monday Part 3 already covered JWT at gateway vs Booking. Tuesday you still ask: “Walk me from login to Book.” He has to correct you.
+
+## Good
+
+You read Monday’s notes first. You say: Auth is done. Leftover is the cache extra from Monday (key and 10×). Then you wait, or you ask only that leftover.
+
+Do not make him be the calendar.
