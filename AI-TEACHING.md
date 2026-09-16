@@ -62,7 +62,7 @@ Run from **repo root**:
 
 ## Gate (before code)
 
-**Cover:** problem in plain words. **Never name the pattern** until he does (not HashMap, HashSet, sliding window, two pointers, Floyd, dummy, …).
+**Cover:** problem in plain words **plus the LeetCode URL**. **Never name the pattern** until he does (not HashMap, HashSet, sliding window, two pointers, Floyd, dummy, …).
 
 **You state** (do not ask) why it is good for a mid-level Java role.
 
