@@ -76,9 +76,18 @@ Wrong name → bounce (example: sliding window on “nth from end of list” is 
 
 After a good name: **Memorize this** template, then he codes.
 
+## Timer (from Week 5 Day 4)
+
+Real interview clock. He either lands it or he does not.
+
+- Clock starts after **Memorize this**, when he starts coding.
+- **Medium: 25 min.** **Easy: 15 min.**
+- Warn at 5 min left. At 0: **stop**. No more hints. Do not fill the method.
+- He may keep going after the clock for learning. Notes must say **on-time** or **overtime**.
+
 ## Coding
 
-No help unless he asks. If he asks: **hints and walked examples**, not a filled method.
+No help unless he asks. If he asks: **hints and walked examples**, not a filled method. Timer still wins: after 0, hints stop.
 
 Project settings: no ghost Tab / auto-suggest. **Ctrl+Space** stays on.
 
@@ -88,9 +97,11 @@ After green tests: cousin problem if any. Then the next LC or LC-SD.
 
 ## LC-SD
 
-Chapter **N + topic**. One sentence why for this role. Short explain. **He talks first**. Then trap + one interview sentence. Stop. No Java.
+Chapter **N + topic**. **Always paste the LeetCode URL** (coding Cover and LC-SD Cover): [course card](https://leetcode.com/explore/interview/card/system-design-for-interviews-and-beyond). One sentence why for this role. Short explain. **He talks first**. Then trap + one interview sentence. Stop. No Java.
 
 **Check first:** if he already gave that talk this week (Part 1 or Part 3), do not run it again. Ask only what is leftover, or skip. See `.cursor/rules/lc-check-before-ask.mdc`.
+
+**Never fill the answer, then ask him to say it.** If he asks what the question means, rephrase the prompt only. Do not name the product answer. Then wait. If he scraps a chapter, do not re-ask it. Next unused piece from `lc-sd-map`, or skip.
 
 ## End of Part 1 — update this repo, do not push
 
@@ -99,6 +110,7 @@ When that day's Part 1 is closed:
 1. Leave **his** solutions and tests in place.
 2. Sync this file + `.cursor/rules/lc-session.mdc` if the protocol changed.
 3. Extra weak spots / skips **not** already in the notes repo → `notes/` here.
-4. **Do not push.** He will ask to push after **Part 3**, together with the notes.
+4. Notes sentences: each sentence that ends with `.` is a new line. See `.cursor/rules/lc-notes.mdc`.
+5. **Do not push.** He will ask to push after **Part 3**, together with the notes.
 
 Remote: `https://github.com/antondahdal/LC-Practice.git`

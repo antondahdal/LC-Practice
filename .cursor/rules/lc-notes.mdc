@@ -1,0 +1,28 @@
+---
+description: Notes sentences — period means a new line
+alwaysApply: true
+---
+
+# Notes — one sentence per line
+
+When you write mentor notes (`notes/`, `week-NN.md` deltas, anything that lands in the notes repo), **each sentence that ends with `.` goes on its own line.**
+
+Do not pack two sentences into one paragraph.
+
+## Bad
+
+> Front walks `n`. Then both until front has no next. Back sits before the victim.
+
+## Good
+
+> Front walks `n`.
+>
+> Then both until front has no next.
+>
+> Back sits before the victim.
+
+Headings, lists, and code fences stay as they are.
+
+A line that is not a sentence (a heading, a table row, a URL) does not get a fake period.
+
+This is **notes only**. Chat still follows `.cursor/rules/lc-voice.mdc`.

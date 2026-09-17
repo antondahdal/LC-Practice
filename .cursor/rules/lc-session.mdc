@@ -43,9 +43,18 @@ If the name is wrong (e.g. sliding window on a linked list), bounce it. Do not g
 
 After he names it: give the **Memorize this** template, then he codes.
 
+## Timer (from Week 5 Day 4)
+
+Real interview clock. He either lands it or he does not.
+
+- Gate talk is short. Clock starts after **Memorize this**, when he starts coding.
+- **Medium: 25 min.** **Easy: 15 min.**
+- Arm a one-shot local timer when coding starts. Warn at 5 min left. At 0: **stop**. No more hints. Do not fill the method.
+- He may keep going after the clock for learning. Notes must say **on-time** or **overtime**.
+
 ## Coding
 
-**No coding help** unless Anton asks — no hints, no snippets, no filling the method. If he asks: hints and examples only unless he asks for code.
+**No coding help** unless Anton asks — no hints, no snippets, no filling the method. If he asks: hints and examples only unless he asks for code. Timer still wins: after 0, hints stop.
 
 - Run tests from **repo root**: `.\mvnw.cmd test` (or `-Dtest=test.weekNN.FooTest`).
 - Ghost / Tab / auto-suggest stay off in this project. **Ctrl+Space** Java completions stay on.
@@ -55,9 +64,13 @@ After tests pass: cousin if any. Then next LC or LC-SD. Do not jump to Spring / 
 
 ## LC-SD (Mon–Thu, after both LCs)
 
-Chapter N + topic from `lc-sd-map`. Why for the role (one sentence). Explain a bit. Then **he talks first**. After: trap + one interview sentence. Stop. No Java. No Kafka unless the map says.
+Chapter N + topic from `lc-sd-map`. **Always paste the LeetCode URL** in the Cover (same rule as coding, Anton 2026-09-17): [course card](https://leetcode.com/explore/interview/card/system-design-for-interviews-and-beyond). Why for the role (one sentence). Explain a bit. Then **he talks first**. After: trap + one interview sentence. Stop. No Java. No Kafka unless the map says.
 
 Read this week’s notes **before** you ask. If that talk already happened (including Part 3 earlier this week), do not ask it again. Ask only the leftover, or skip.
+
+**Never fill the answer, then ask him to say it.** If he asks what the question means, rephrase the prompt only. Do not name the product answer (Book / 201 / 409 / key / box). Then wait.
+
+If he scraps a chapter, do not re-ask it. Pick the next unused piece from `lc-sd-map`, or skip.
 
 ## End of Part 1 — update LC-Practice (do not push)
 
@@ -66,6 +79,7 @@ When Part 1 for that weekday is closed (both LCs + LC-SD if Mon–Thu):
 1. Keep **Anton’s solution** and the JUnit tests in this repo. Do not rewrite them into a textbook dump.
 2. Refresh `.cursor/rules/` and `AI-TEACHING.md` if the teaching protocol changed that day.
 3. If something is **not** already in [booking-app-interview-notes](https://github.com/antondahdal/booking-app-interview-notes) (weak spots, skip/replace, dummy vs head, mix-ups), add it under `notes/` here so another Cursor/AI can behave the same.
-4. **Do not `git push`.** Anton will say to push (with the notes) after he finishes **Part 3** that day.
+4. Notes sentences: period = new line. Full rule: `.cursor/rules/lc-notes.mdc`.
+5. **Do not `git push`.** Anton will say to push (with the notes) after he finishes **Part 3** that day.
 
 Remote: `https://github.com/antondahdal/LC-Practice.git`

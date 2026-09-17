@@ -26,3 +26,7 @@ Monday Part 3 already covered JWT at gateway vs Booking. Tuesday you still ask: 
 You read Monday’s notes first. You say: Auth is done. Leftover is the cache extra from Monday (key and 10×). Then you wait, or you ask only that leftover.
 
 Do not make him be the calendar.
+
+If he asks what an LC-SD question means, rephrase the prompt. Do **not** fill Book / 201 / 409 / a key / a box, then ask it again. That is answering for him.
+
+If he scraps a chapter, do not run it again that day. Next unused piece from `lc-sd-map`, or skip.
