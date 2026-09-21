@@ -117,6 +117,5 @@ The same row may still run twice.
 
 ## Calendar
 
-Day 1 **coding + LC-SD closed**.
-Do not push from this repo until he says, after Part 3.
+Day 1 **coding + LC-SD + Spring/Part 3 closed**.
 **Next weekday:** Week 6 Day 2 — leftover tree Mediums #98, #230 (and bank fill if needed).
