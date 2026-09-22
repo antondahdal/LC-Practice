@@ -82,6 +82,7 @@ Real interview clock. He either lands it or he does not.
 
 - Clock starts after **Memorize this**, when he starts coding.
 - **Medium: 25 min.** **Easy: 15 min.**
+- **Two pings only** (Anton 2026-09-22): 5 min left, then 0. Do not keep saying the clock is running during the question.
 - Warn at 5 min left. At 0: **stop**. No more hints. Do not fill the method.
 - He may keep going after the clock for learning. Notes must say **on-time** or **overtime**.
 
