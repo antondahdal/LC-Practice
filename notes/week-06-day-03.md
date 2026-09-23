@@ -97,14 +97,24 @@ Check sum mid-path, not only at leaf.
 
 **Cousin:** field `sum`, undo once at the end of the frame after both kids.
 
-## Part 1 Design — Chapter 9 batching / timeout — open
+## Part 1 Design — Chapter 9 batching / timeout — done
 
 CDN / edge **skip**.
-Use batching / timeout on this app.
+Batching + timeout on this app.
 Not YouTube.
+
+Anton: batch when many Books; timeout when Book is slow.
+Timeout half is right (Event wait).
+Batch half is weak: do not merge separate user Books into one call.
+Each Book keeps its own click / seats / outcome.
+Batch seat checks or mail sends, not every Book POST.
+
+**Trap:** timeout or a half-batch must not look like a ticket.
+
+**Interview sentence:** time out the Event wait.
+Batch only work that shares one ask — never fake a Book.
 
 ## Calendar
 
-Day 3 **coding done**.
-LC-SD next, then Part 2/3.
-**Do not push** until he asks (he asked mid-day after coding).
+Day 3 **coding + LC-SD closed**.
+Part 2/3 next (carry Factory + library LLD, then metrics).
