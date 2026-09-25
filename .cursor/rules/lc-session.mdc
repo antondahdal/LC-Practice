@@ -63,6 +63,12 @@ Real interview clock. He either lands it or he does not.
 
 After tests pass: cousin if any. Then next LC or LC-SD. Do not jump to Spring / Part 3 in this repo.
 
+## Week 9 — Spring Boot question replaces LC-SD (Anton 2026-09-25)
+
+Two coding LCs (Medium then Easy), same gate and timer. Mon–Thu after both: **~20 min, two Spring Boot questions** from the `week-09.md` bank (S1–S8). Friday after both: **~15 min rapid-fire** (R1–R8). By Friday the whole bank is covered. No LC-SD chapter in Week 9.
+
+Topic + one sentence why for the role. Short explain. **He talks first.** Trap + one interview sentence. Stop. No code unless he asks for a snippet. Same "never fill the answer, then ask" rule as LC-SD.
+
 ## LC-SD (Mon–Thu, after both LCs)
 
 Chapter N + topic from `lc-sd-map`. **Always paste the LeetCode URL** in the Cover (same rule as coding, Anton 2026-09-17): [course card](https://leetcode.com/explore/interview/card/system-design-for-interviews-and-beyond). Why for the role (one sentence). Explain a bit. Then **he talks first**. After: trap + one interview sentence. Stop. No Java. No Kafka unless the map says.

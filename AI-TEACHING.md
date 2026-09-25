@@ -41,6 +41,8 @@ Read first: `interview-notes/part1-map.md`, `lc-patterns.md`, `lc-sd-map.md`, cu
 
 Weeks 3–5: **two** LCs per weekday. Weeks 6–8: **three**.
 
+Week 9 (Anton 2026-09-25): **two** LCs. Mon–Thu, the LC-SD slot becomes **~20 min, two Spring Boot questions** from the `week-09.md` bank (S1–S8). Same run: topic, why, short explain, he talks first, trap + one sentence. Friday after coding: **~15 min rapid-fire** (R1–R8), so the whole bank is covered.
+
 If he skips a problem, pick another Top Interview 150 from **that same week's bank**.
 
 ## Layout
