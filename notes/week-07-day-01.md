@@ -113,13 +113,36 @@ Off-by-one on a poll loop.
 Time of heap work: he says log n for the whole thing.
 Rule: n offers × log(size) each.
 
-## Part 1 Design
+## Part 1 Design — Ch 10 consistent hashing lite — Done
 
-Ch 10 consistent hashing lite still to run (W7 Mon slot in `lc-sd-map`).
-Anton asked to push before the talk.
+Hot key / partition lite already done W5 Wed.
+Leftover piece today: consistent hashing.
+
+Prompt: Event GET cached across 3 Redis nodes, 10× before a sale, add a 4th node.
+He said "I really don't know".
+Broke it down with numbers: keys 10–14, `% 3` then `% 4`.
+He asked why we do not let only new keys use the new formula.
+Answer: on a GET the pod does not know if a key is old or new, it only has the key and today's formula.
+Remembering the formula per key is a table of every key.
+He counted 14 same, 10 moved (11 also moved).
+Coach: over many keys, 3 → 4 nodes moves about 3 of 4 keys with `%`, about 1 of 4 on a ring.
+
+**His answer (good):**
+Browse: pod looks in the wrong box, misses, reads again, user sees a bit of latency.
+Book: no change, cache is not responsible for Book.
+
+**Trap:** misses land on the DB all at once at the 10× moment.
+`%` gives a wave (about 3 of 4 keys), ring gives a bump (about 1 of 4).
+Add the node before the sale, not during.
+
+**Interview sentence:** keys go on a hash ring, so adding a cache node moves only its share of keys; the rest stay hot, the DB sees a small bump instead of a wave, and Book still goes to the row.
+
+**Weak:** could not start the design question cold.
+Numbers first, then the product, worked.
+
+Anton asked to push before the talk, then again after.
 
 ## Calendar
 
-Day 1 coding closed (#347 on-time, #35 time up, #215 overtime).
-LC-SD pending.
+Day 1 Part 1 closed (#347 on-time, #35 time up, #215 overtime, Ch 10 consistent hashing).
 **Next:** Week 7 Day 2, start with #56 Merge Intervals.
