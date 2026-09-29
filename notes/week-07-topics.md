@@ -5,6 +5,38 @@ Anton asked for it 2026-09-28 (Week 7 Day 1).
 He did not remember what intervals and binary search mean, and did not get how `mid` works on #35.
 Heap API short cuts live in `notes/heap-cheatsheet.md`.
 
+## Short version (asked again 2026-09-29, Week 7 Day 2)
+
+### Heap
+
+A box that always knows its best element.
+Min-heap keeps the smallest on top, max-heap keeps the biggest.
+In Java it is `PriorityQueue`.
+You use it when the question says "top k", "kth largest", or "next most urgent".
+Each `offer` or `poll` is O(log size), so n offers into a heap of size k is O(n log k).
+
+### Binary search
+
+The array is already sorted.
+Look at the middle, decide which half the answer is in, throw the other half away.
+Two indices `lo` and `hi` close in until they cross.
+You use it when you see "sorted" plus "O(log n)", or a rotated sorted array.
+Time O(log n), extra O(1).
+
+### Intervals
+
+The input is pairs `[start, end]`, like meetings or bookings.
+The questions ask how the ranges touch: merge them, count rooms, find a gap, insert a new one.
+Almost always you sort by start first, then walk once and compare each pair with the last one you kept.
+Sort O(n log n) plus one walk O(n).
+
+### The quick test
+
+Pairs of start and end → intervals.
+Sorted array and O(log n) → binary search.
+"Best k" or "kth" → heap.
+None of the three is a tree walk.
+
 ## How to tell the three apart
 
 Read the input and the question first.
