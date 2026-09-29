@@ -8,4 +8,6 @@ Starts with #56 Merge Intervals (left over from Monday).
 
 **Before the gate:** he asked for heap / binary search / intervals to be explained again.
 Coach gave the short version of all three with no pick for #56.
-Added as "Short version" at the top of `notes/week-07-topics.md`.
+Added as "Short version" at the top of the topics sheet.
+Then he asked for one file: `heap-cheatsheet.md` renamed to `notes/heap.md`, with all three topics inside.
+`week-07-topics.md` removed.

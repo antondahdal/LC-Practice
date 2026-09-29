@@ -41,7 +41,7 @@ Leftover `println` and unused import.
 **Cousin:** min-heap capped at k is O(n log k).
 Bucket by count (array of lists, index = count, walk from the top) is O(n).
 
-He asked for a heap cheat sheet: `notes/heap-cheatsheet.md`.
+He asked for a heap cheat sheet: now in `notes/heap.md`.
 
 ## LC 35 Search Insert Position — time up, coach filled
 
