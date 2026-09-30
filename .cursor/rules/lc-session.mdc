@@ -87,7 +87,7 @@ When Part 1 for that weekday is closed (both LCs + LC-SD if Mon–Thu):
 1. Keep **Anton’s solution** and the JUnit tests in this repo. Do not rewrite them into a textbook dump.
 2. Refresh `.cursor/rules/` and `AI-TEACHING.md` if the teaching protocol changed that day.
 3. If something is **not** already in [booking-app-interview-notes](https://github.com/antondahdal/booking-app-interview-notes) (weak spots, skip/replace, dummy vs head, mix-ups), add it under `notes/` here so another Cursor/AI can behave the same.
-4. Notes sentences: period = new line. Full rule: `.cursor/rules/lc-notes.mdc`.
+4. LC notes **explain the problem and patch his holes**, not a replay of what he did (Anton 2026-09-30): problem, idea, steps with a small trace, holes to patch, then a few lines on how it went. Period = new line. Full rule: `.cursor/rules/lc-notes.mdc`.
 5. **Do not `git push`.** Anton will say to push (with the notes) after he finishes **Part 3** that day.
 
 Remote: `https://github.com/antondahdal/LC-Practice.git`

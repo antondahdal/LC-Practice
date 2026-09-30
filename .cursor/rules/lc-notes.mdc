@@ -1,19 +1,52 @@
 ---
-description: Notes sentences — period means a new line
+description: LC notes explain the problem and patch holes; one sentence per line
 alwaysApply: true
 ---
 
-# Notes — one sentence per line
+# Notes — explain, do not log
+
+## LC notes teach, they do not replay the session (Anton 2026-09-30)
+
+Anton reads the notes to understand the problem better and to patch his holes.
+A timeline of what he did ("10:19 planned a HashMap, coach asked, 1 of 7 green") does not help him.
+Write the notes so that someone who never saw the session could learn the problem from them.
+
+Each LC section has these parts, in this order:
+
+1. **The problem** — plain words, one small example, the LeetCode URL.
+2. **The idea** — why this approach works and what you keep while you scan. Name the pattern here (the gate is over).
+3. **How to solve it** — steps in words. Walk one small input in a table (columns like `i`, current value, what you keep, output so far).
+4. **Holes to patch** — the main part. For each mistake he made: what the wrong thinking was, a concrete input where it breaks, and the correct rule in one line. Add the fix line of Java if it is short.
+5. **How it went** — three or four lines at most: on-time or overtime, coach-fixed or not, which hole cost the clock. A few lines on how his version was shaped is fine.
+
+Do not write:
+
+- Minute stamps or a play-by-play of the gate and the clock.
+- "Coach asked X, he said Y" chains.
+- A list of every hint that was given.
+
+Time and extra space go in **The idea** with one sentence of why.
+
+## Review sheet per week (Anton 2026-09-30)
+
+`notes/review/week-NN.md` holds every LC of that week for interview review.
+After each LC is closed, add its section there too: the five parts above plus **Memorize this** (4–7 steps in words, one compact reference Java solution, one "Say in the interview" sentence).
+Java is allowed in the review sheet; the no-Java rule is only for the live gate.
+Keep the table at the top of the sheet and the index in `notes/review/README.md` up to date.
+
+LC-SD / design sections follow the same spirit: the question, the right answer with the reason, the traps he hit, the interview sentence. Keep the "what he said" part short.
+
+## One sentence per line
 
 When you write mentor notes (`notes/`, `week-NN.md` deltas, anything that lands in the notes repo), **each sentence that ends with `.` goes on its own line.**
 
 Do not pack two sentences into one paragraph.
 
-## Bad
+### Bad
 
 > Front walks `n`. Then both until front has no next. Back sits before the victim.
 
-## Good
+### Good
 
 > Front walks `n`.
 >
@@ -21,7 +54,7 @@ Do not pack two sentences into one paragraph.
 >
 > Back sits before the victim.
 
-Headings, lists, and code fences stay as they are.
+Headings, lists, tables, and code fences stay as they are.
 
 A line that is not a sentence (a heading, a table row, a URL) does not get a fake period.
 

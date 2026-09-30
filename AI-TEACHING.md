@@ -115,7 +115,7 @@ When that day's Part 1 is closed:
 1. Leave **his** solutions and tests in place.
 2. Sync this file + `.cursor/rules/lc-session.mdc` if the protocol changed.
 3. Extra weak spots / skips **not** already in the notes repo → `notes/` here.
-4. Notes sentences: each sentence that ends with `.` is a new line. See `.cursor/rules/lc-notes.mdc`.
+4. LC notes **teach, they do not log** (Anton 2026-09-30). Per LC: the problem, the idea (why it works, time / space), steps in words with a small trace, **holes to patch** (wrong thinking, an input where it breaks, the right rule), then three or four lines on how it went. No minute stamps, no "coach asked / he said" chains. Also add the LC to the weekly review sheet `notes/review/week-NN.md` with a **Memorize this** block (steps + one reference Java solution). Each sentence that ends with `.` is a new line. See `.cursor/rules/lc-notes.mdc`.
 5. **Do not push.** He will ask to push after **Part 3**, together with the notes.
 
 Remote: `https://github.com/antondahdal/LC-Practice.git`

@@ -4,88 +4,153 @@ Tuesday.
 Three LCs (Weeks 6–8), then LC-SD.
 Starts with #56 Merge Intervals (left over from Monday).
 
-## LC 56 Merge Intervals
+Before the gate he asked for heap, binary search, and intervals to be explained again.
+All three now live in `notes/heap.md` ("Short version" at the top).
 
-**Before the gate:** he asked for heap / binary search / intervals to be explained again.
-Coach gave the short version of all three with no pick for #56.
-Added as "Short version" at the top of the topics sheet.
-Then he asked for one file: `heap-cheatsheet.md` renamed to `notes/heap.md`, with all three topics inside.
-`week-07-topics.md` removed.
+## LC 56 Merge Intervals — time up, green in overtime
 
-**Gate:** named intervals ("clearly intervals").
-Said he did not know the coding shape, asked for a code example.
-Coach gave Memorize (steps in words + Java pieces: `Arrays.sort` with comparator, `List<int[]>`, last kept, `Math.max`, `toArray`).
-Time O(n log n), space O(n), both right.
+https://leetcode.com/problems/merge-intervals/
 
-**Clock:** 25 min Medium, started 10:13.
+### The problem
 
-**Mid-clock (10:19):** planned a `HashMap` + overlap check.
-Coach asked what the key would be and how the map finds the overlapping pair.
-He went back to sort + walk but said intervals still felt vague.
-Hints: the "Result so far" column of the merge table is the list, "Last kept" is always `list.get(size - 1)`.
-Then a pass-by-pass trace of how each Memorize piece fits (`pair` must come from a loop).
+You get a list of `[start, end]` pairs.
+Merge every pair that overlaps and return what is left.
+`[[1,3],[2,6],[8,10],[15,18]]` gives `[[1,6],[8,10],[15,18]]`.
 
-**10:34, first run:** 1 of 7 green.
-Overlap check compared `pair[1] >= last[0]` (wrong ends).
-Merged pair took the new start and the old end.
-Hints: say the rule out loud (next start ≤ last end), try `[1,2]` then `[3,4]`; whose start does the merge keep, which end wins.
+### The idea
 
-**At the bell (10:38):** 6 of 7 green.
-Overlap check and start fixed.
-End is `pair[1]` instead of the bigger of both ends, so `[1,10]` then `[2,3]` gives `[1,3]`.
-**Clock result:** time up, not landed.
-He asked coach to say the fix: `newPair[1] = Math.max(tmpPair[1], pair[1])`.
-Sorted by start, the next pair can still end earlier (inside the last kept one).
+Pattern: intervals (sort by start, then one walk).
+Once the pairs are sorted by start, anything that overlaps the last merged pair must come right after it.
+So you only ever look at one thing while scanning: the **last kept** pair in the result list.
+Time O(n log n) because of the sort.
+Extra space O(n) for the result list.
 
-**Nit:** remove + add a new array works, but changing `last[1]` in place is enough (same array as in the list).
+### How to solve it
 
-**Weak:**
-Could not turn the intervals idea into a loop without a trace.
-Reached for a `HashMap` again when the shape felt vague.
-Compared the wrong ends in the overlap check.
-Forgot `max` on the end, the exact trap from the notes table.
-Why he missed it: thought sorting makes both start and end go up.
-Sort by start orders only slot 0, ends ride along (`[1,10]` then `[2,3]`).
+1. Sort by start: `Arrays.sort(intervals, (a, b) -> a[0] - b[0])`.
+2. Put the first pair in a `List<int[]>`.
+3. For every next pair, look at the last kept one (`list.get(list.size() - 1)`).
+4. If next start ≤ last end, they overlap: last end becomes the **bigger** of the two ends.
+5. Otherwise it is a new group: add the pair.
+6. Return `list.toArray(new int[0][])`.
 
-10-minute break at 10:40, before the #228 gate.
-Back 11:06, `max` fix in, all 7 green (overtime).
+Trace on `[[1,10],[2,3],[4,12],[15,18]]` (already sorted):
 
-## LC 228 Summary Ranges
+| next pair | last kept | overlap? (next start ≤ last end) | action | result |
+|---|---|---|---|---|
+| `[1,10]` | — | — | add | `[1,10]` |
+| `[2,3]` | `[1,10]` | 2 ≤ 10 yes | end = max(10, 3) = 10 | `[1,10]` |
+| `[4,12]` | `[1,10]` | 4 ≤ 10 yes | end = max(10, 12) = 12 | `[1,12]` |
+| `[15,18]` | `[1,12]` | 15 ≤ 12 no | add | `[1,12]`, `[15,18]` |
+
+Row 2 is the whole trap: a pair can sit fully inside the last one.
+
+### Holes to patch
+
+**Sorting by start does not sort the ends.**
+He thought sorting makes both start and end go up.
+Sort orders only slot 0; the ends ride along.
+Breaks on `[[1,10],[2,3]]`: taking the new end gives `[1,3]` and throws away 4..10.
+Rule: merged end is `Math.max(last[1], pair[1])`, always.
+
+**Overlap check on the wrong ends.**
+He compared `pair[1] >= last[0]` (next end vs last start).
+Breaks on `[[1,2],[3,4]]`: 4 ≥ 1 is true, so two separate pairs get merged.
+Rule: overlap means **next start ≤ last end**.
+
+**Which start the merge keeps.**
+He took the new pair's start.
+Breaks on `[[1,3],[2,6]]`: gives `[2,6]` and loses 1.
+Rule: sorted by start, so the last kept start is already the smallest; keep it.
+
+**Reaching for a `HashMap` when the shape feels vague.**
+There is no key to look up here.
+Overlap is about order on the number line, so the tool is sort, not a map.
+
+**Updating the last pair.**
+`last` is the same array object that sits in the list.
+`last[1] = Math.max(last[1], pair[1])` is enough; no remove and re-add.
+
+### How it went
+
+25 min Medium clock.
+At the bell 6 of 7 green; only the missing `max` on the end was left.
+After a break he put the `max` in and got 7 of 7 (overtime).
+Memorize that day came with Java pieces because he asked for code on this problem.
+
+## LC 228 Summary Ranges — time up, coach-fixed in overtime
+
+https://leetcode.com/problems/summary-ranges/
 
 Easy slot from Top Interview 150, Intervals section (printed Week 7 line has only Mediums).
 
-**Gate:** "not sure", then "loop, two pointers, current and next value".
-Accepted: one index holds the group start, the other walks, current vs next ends a group.
-Coach gave Memorize with Java pieces.
-He pushed back: he did not ask for code.
-Rule added: Memorize is steps in words only, Java only if he asks on that problem.
-Time O(n), space O(n), right (the output list; O(1) besides the output).
+### The problem
 
-**Clock:** 15 min Easy, started 11:14.
+You get a sorted array of unique ints.
+Write each run of consecutive numbers as `"a->b"`, or `"a"` if the run is one number.
+`[0,1,2,4,5,7]` gives `["0->2","4->5","7"]`.
 
-**11:38 (after the 11:29 bell):** 1 of 7 green (only empty).
-Loop runs to `length - 1`, compares `nums[i]` with `nums[i + 1]`, keeps the current run in a `Stack` (first / last element).
-The last group is never written, in every test.
-`new ArrayList<>(nums[0])` for one number is a capacity, not an element, so the list is empty.
-**Clock result:** time up, not landed.
+### The idea
 
-He asked why the last index is never written.
-Answer: loop stops at `length - 1`, so the last number is only ever `nums[i + 1]`.
-Groups are written only on a gap after `nums[i]`, and there is no gap after the last one.
-He tried a close-after-loop block (read `last` before declaring it), then asked coach to fix.
+Pattern: one walk with a run start (two indexes: where the run began, where you are now).
+A run keeps going while the next number is exactly current + 1.
+A run ends in two cases: the next number jumps, **or there is no next number**.
+You only keep the start of the current run; the end is whatever `nums[i]` is when the run closes.
+Time O(n).
+Extra space O(1) besides the output list.
 
-**Coach fix (his structure kept):**
-After the loop, if the stack is not empty the last number continues the run, so push it and write `first->last`, else write it alone.
-Stack non-empty there means `nums[n-2] + 1 == nums[n-1]`, no extra compare needed.
-Length 1: `new ArrayList<>(List.of(String.valueOf(nums[0])))`.
+### How to solve it
+
+1. Walk `i` from 0 to `n - 1` (the whole array, including the last index).
+2. When a run starts, remember `start = nums[i]`.
+3. The run closes at `i` if `i == n - 1` or `nums[i + 1] != nums[i] + 1`.
+4. On close, write `start` alone if `start == nums[i]`, else `start + "->" + nums[i]`.
+5. The next index starts a new run.
+
+Trace on `[0,1,2,4,5,7]`:
+
+| i | nums[i] | next | run start | closes here? | output |
+|---|---|---|---|---|---|
+| 0 | 0 | 1 | 0 | no | |
+| 1 | 1 | 2 | 0 | no | |
+| 2 | 2 | 4 | 0 | yes, jump | `"0->2"` |
+| 3 | 4 | 5 | 4 | no | |
+| 4 | 5 | 7 | 4 | yes, jump | `"4->5"` |
+| 5 | 7 | none | 7 | yes, end of array | `"7"` |
+
+The last row is the one his code never reached.
+
+### Holes to patch
+
+**The last run is never written.**
+His loop ran to `length - 1` and wrote a run only when there was a gap after `nums[i]`.
+The last number has no gap after it, so its run never closes.
+Breaks on `[0,1,2]`: output is empty.
+Rule: "end of array" counts as a gap.
+Either put `i == n - 1 ||` in the close check, or close the open run once after the loop.
+Same family as every "last group / last run" bug: after the loop, ask what is still open.
+
+**`new ArrayList<>(nums[0])` is a capacity, not an element.**
+The `int` constructor sets the starting size of the backing array; the list is still empty.
+Rule: `new ArrayList<>(List.of(x))`, or make the list and `add(x)`.
+
+**Too much state for a run.**
+He kept the run in a `Stack` and read `firstElement()` / `lastElement()`.
+The last element is always `nums[i]` at close time, so only the start is needed.
+One `int start` removes the stack and most of the branches.
+
+**Special case for length 1.**
+Only needed because the loop skipped the last index.
+With the close check including `i == n - 1`, length 1 and length 0 fall out of the normal loop.
+
+### How it went
+
+15 min Easy clock.
+At the bell 1 of 7 green (only the empty test).
+Coach fixed it at his request, keeping his stack: after the loop, if the stack is not empty push the last number and write `first->last`, else write the last number alone.
 All 7 green (overtime, coach-fixed).
-
-**Nits:** a `Stack` to hold a run only needs its first element; one `int start` index is enough.
-
-**Weak:**
-Closing the last group after a loop (same family as "last run" bugs).
-`new ArrayList<>(int)` is capacity, not contents.
-Frustrated when the question was not answered straight — answer the exact question asked first.
+Coaching note: when he asks a direct "why", answer that exact question first.
+Rule added this day: Memorize is steps in words only; Java only if he asks on that problem.
 
 ## Third LC
 
