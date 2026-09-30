@@ -9,6 +9,8 @@ Week 7 covered three families: heap (top k / kth largest), binary search (sorted
 | 215 | Kth Largest Element in an Array | Heap (min-heap of size k) | O(n log k) / O(k) | overtime, coach-fixed |
 | 56 | Merge Intervals | Intervals (sort by start, one walk) | O(n log n) / O(n) | overtime |
 | 228 | Summary Ranges | Intervals (one walk with a run start) | O(n) / O(1) extra | overtime, coach-fixed |
+| 33 | Search in Rotated Sorted Array | Binary search (find the sorted half) | O(log n) / O(1) | on-time, coach gave the fix |
+| 153 | Find Minimum in Rotated Sorted Array | Binary search (mid vs high) | O(log n) / O(1) | on-time |
 
 How to tell the three apart:
 
@@ -522,3 +524,198 @@ Say in the interview: I walk once, remember where the current run started, exten
 Time up on the 15-minute clock with 1 of 7 green (only the empty test).
 The hole that cost the clock was the last run never closing, because the loop stopped before the last index.
 The coach fixed it at his request, keeping his stack: after the loop, close the open run with the last number; then all 7 were green (overtime, coach-fixed).
+
+---
+
+## LC 33 Search in Rotated Sorted Array — on-time, coach gave the fix
+
+https://leetcode.com/problems/search-in-rotated-sorted-array/
+
+### The problem
+
+A sorted array of unique ints was cut at an unknown point and the two pieces swapped.
+`[0,1,2,4,5,6,7]` becomes `[4,5,6,7,0,1,2]`.
+Return the index of `target`, or -1 if it is not there, in O(log n).
+Target 0 gives 4.
+Target 3 gives -1.
+
+### The idea
+
+Pattern: binary search.
+The array is not fully sorted, so "is `nums[mid]` bigger than target?" does not tell you which way to go.
+What always holds: cut the range at any `mid` and **one of the two halves is fully sorted** (the cut can only be on one side).
+A range check ("is target between the two ends?") is only trustworthy on the sorted half.
+So each step asks two questions: which half is sorted, and is the target inside it.
+Time O(log n): every step throws away half the range.
+Extra space O(1): only `low`, `high`, `mid`.
+
+### How to solve it
+
+1. `low = 0`, `high = n - 1`, loop while `low <= high`.
+2. `mid = low + (high - low) / 2`; if `nums[mid] == target`, return `mid`.
+3. If `nums[low] <= nums[mid]`, the left half is sorted.
+   If target is in `[nums[low], nums[mid])`, go left (`high = mid - 1`), else go right (`low = mid + 1`).
+4. Otherwise the right half is sorted.
+   If target is in `(nums[mid], nums[high]]`, go right, else go left.
+5. Loop ends: return -1.
+
+Trace on `[4,5,6,7,0,1,2]`, target 0:
+
+| low | high | mid (value) | sorted half | target inside it? | move |
+|---|---|---|---|---|---|
+| 0 | 6 | 3 (7) | left, 4..7 | 0 in [4, 7)? no | low = 4 |
+| 4 | 6 | 5 (1) | left, 0..1 | 0 in [0, 1)? yes | high = 4 |
+| 4 | 4 | 4 (0) | — | found | return 4 |
+
+### Holes to patch
+
+**Plain sorted-array binary search on a rotated array.**
+His first version went left whenever `nums[mid] > target`.
+Breaks on `[4,5,6,7,0,1,2]`, target 0: `mid` is 7, 7 > 0, so it goes left, but 0 is on the right; it returns -1.
+Rule: first find the sorted half, then range-check the target on that half only.
+
+**Thinking the tests were wrong.**
+Some tests check the same array twice (target at index 0 and at the last index).
+Returning a fixed number always fails one of the two, so "expected 0 / expected -1" flipping means the logic, not the test.
+
+**Special case for length 2.**
+He added an `if (nums.length == 2)` block.
+Not needed: the general loop already handles 1 and 2 elements.
+Special cases for small sizes usually hide a missing rule in the loop.
+
+**`<=` in `nums[low] <= nums[mid]`.**
+When `low == mid` (two elements left), the left half is one element and counts as sorted.
+With `<` instead, `[3,1]` target 1 checks the wrong half.
+
+### Memorize this
+
+1. `low`, `high`, loop while `low <= high`, `mid` in the middle.
+2. Hit: return `mid`.
+3. `nums[low] <= nums[mid]` means the left half is sorted, else the right is.
+4. Target inside the sorted half: go there.
+5. Otherwise go to the other half.
+6. O(log n) time, O(1) space.
+
+```java
+public int search(int[] nums, int target) {
+    int low = 0, high = nums.length - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (nums[mid] == target) return mid;
+        if (nums[low] <= nums[mid]) {
+            if (target >= nums[low] && target < nums[mid]) high = mid - 1;
+            else low = mid + 1;
+        } else {
+            if (target > nums[mid] && target <= nums[high]) low = mid + 1;
+            else high = mid - 1;
+        }
+    }
+    return -1;
+}
+```
+
+Say in the interview: at any mid one half of a rotated sorted array is still sorted, so I check whether the target falls inside that sorted half and discard the other half, which keeps it O(log n).
+
+### How it went
+
+Named binary search, O(log n) and O(1) right; the "why" needed the sorted-half idea added.
+Coded a plain binary search; 6 of 9 green, the 3 rotated cases failed.
+Asked for the direction logic as code; all 9 green at about 16 minutes (on-time, coach gave the fix).
+Said binary search feels dry; framing that helped: one loop, only the "higher or lower" question changes per problem.
+
+---
+
+## LC 153 Find Minimum in Rotated Sorted Array — on-time
+
+https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/
+
+### The problem
+
+Same kind of array as #33: sorted, unique, cut and swapped somewhere.
+Return the smallest number in O(log n).
+`[3,4,5,1,2]` gives 1.
+`[11,13,15,17]` (rotated all the way round) gives 11.
+
+### The idea
+
+Pattern: binary search.
+The minimum sits right after the one place where the order drops.
+Compare `nums[mid]` with `nums[high]`:
+If `nums[mid] > nums[high]`, the drop is between `mid` and `high`, and `mid` is not the minimum (`nums[high]` is already smaller), so go right past `mid`.
+Otherwise `mid..high` goes up, so the minimum is `mid` or left of it; keep `mid` in the range.
+Time O(log n): half the range is gone each step.
+Extra space O(1).
+
+### How to solve it
+
+1. `low = 0`, `high = n - 1`.
+2. Loop while `low < high` (stop when they meet, not after).
+3. `mid = low + (high - low) / 2`.
+4. `nums[mid] > nums[high]`: `low = mid + 1`.
+5. Else: `high = mid`.
+6. Return `nums[low]`.
+
+Trace on `[4,5,6,7,0,1,2]`:
+
+| low | high | mid | nums[mid] | nums[high] | mid bigger? | move |
+|---|---|---|---|---|---|---|
+| 0 | 6 | 3 | 7 | 2 | yes | low = 4 |
+| 4 | 6 | 5 | 1 | 2 | no | high = 5 |
+| 4 | 5 | 4 | 0 | 1 | no | high = 4 |
+| 4 | 4 | — | — | — | stop | return 0 |
+
+### Holes to patch
+
+**Index vs value.**
+He read `high` as 2 (the last value) instead of 6 (the last index), and `low = mid + 1` as 7 + 1.
+`low`, `high`, `mid` are always positions; values only come through `nums[...]`.
+Rule: say "index" or "value" out loud for every number in a trace.
+
+**What `mid = low + (high - low) / 2` means.**
+He did not get the formula, which made every binary search feel shaky.
+It is the middle: start at `low`, walk half the distance to `high`.
+Same as `(low + high) / 2`, but `low + high` can overflow past `Integer.MAX_VALUE`.
+Integer division rounds down, so with two elements left `mid` is the left one.
+
+**Classic trap: `high = mid - 1`.**
+When `nums[mid] <= nums[high]`, `mid` itself may be the minimum.
+Breaks on `[4,1,2]`: `mid = 1` (value 1), 1 < 2, `high = mid - 1 = 0` throws the answer away and returns 4.
+Rule: `high = mid` (keep it), `low = mid + 1` (it is proven not the answer).
+
+**Classic trap: `while (low <= high)` here.**
+With `high = mid`, `low == high` never moves, so `<=` loops forever.
+Rule: when one side is `high = mid`, loop on `low < high` and return `nums[low]`.
+
+**Classic trap: comparing with `nums[low]`.**
+On an array that is not rotated, `nums[mid] > nums[low]` is always true and sends you right, away from the minimum at index 0.
+`nums[high]` has no such case.
+
+### Memorize this
+
+1. `low = 0`, `high = n - 1`, loop `while (low < high)`.
+2. `mid = low + (high - low) / 2`.
+3. `nums[mid] > nums[high]`: the drop is right, `low = mid + 1`.
+4. Else: `high = mid` (mid may be the answer).
+5. Return `nums[low]`.
+6. O(log n) time, O(1) space.
+
+```java
+public int findMin(int[] nums) {
+    int low = 0, high = nums.length - 1;
+    while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (nums[mid] > nums[high]) low = mid + 1;
+        else high = mid;
+    }
+    return nums[low];
+}
+```
+
+Say in the interview: I compare mid with the right end; if mid is bigger the drop and the minimum are to the right, otherwise mid to the end is sorted so the minimum is mid or left of it, and I shrink until low meets high.
+
+### How it went
+
+Named binary search; time and space same as #33.
+Before coding, the `mid` formula and index vs value had to be cleared up with a single-array table.
+Coded it himself from the six Memorize lines; all 7 green in about 8 minutes (on-time).
+Short step lists worked better than paragraphs today.
