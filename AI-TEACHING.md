@@ -77,6 +77,8 @@ Run from **repo root**:
 Wrong name → bounce (example: sliding window on “nth from end of list” is a **gap of n** between two walkers). Do not hand the memorize line until the name matches.
 
 After a good name: **Memorize this** template, then he codes.
+Memorize is steps in words only.
+No Java snippets unless Anton asks for code on that same problem (Anton 2026-09-29).
 
 ## Timer (from Week 5 Day 4)
 

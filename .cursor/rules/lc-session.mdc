@@ -42,6 +42,7 @@ State the problem in plain words. **Always include the LeetCode URL** in the Cov
 If the name is wrong (e.g. sliding window on a linked list), bounce it. Do not give the memorize template until the name matches the approach. Time/space can still be right.
 
 After he names it: give the **Memorize this** template, then he codes.
+Memorize is **steps in words only**. No Java snippets unless Anton asks for code on **that** problem (Anton 2026-09-29). A request on the last problem does not carry over.
 
 ## Timer (from Week 5 Day 4)
 

@@ -1,5 +1,9 @@
 package questions.week07;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 56. Merge Intervals
  * https://leetcode.com/problems/merge-intervals/
@@ -14,6 +18,29 @@ package questions.week07;
 public class MergeIntervals {
 
     public int[][] merge(int[][] intervals) {
-        return new int[0][];
+        Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+        List<int[]> list = new ArrayList<>();
+        for(int i=0;i<intervals.length;i++){
+            int[] pair=intervals[i];
+
+            if(list.isEmpty()) list.add(pair);
+            else{
+                int[] tmpPair=list.get(list.size()-1);
+                if(tmpPair[1]>=pair[0]) {
+                    int[] newPair= new int[2];
+                    newPair[0]=tmpPair[0];
+                    newPair[1]=newPair[1] = Math.max(tmpPair[1], pair[1]);
+                    list.remove(list.size()-1);
+                    list.add(newPair);
+
+                }
+                else{
+                    list.add(pair);
+                }
+            }
+           
+        }
+       
+        return list.toArray(new int[list.size()][]);
     }
 }
