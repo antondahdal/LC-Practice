@@ -76,6 +76,11 @@ Run from **repo root**:
 
 Wrong name → bounce (example: sliding window on “nth from end of list” is a **gap of n** between two walkers). Do not hand the memorize line until the name matches.
 
+No indirect hints either (Anton 2026-10-02): no "each step must halve", no "compare `mid` with `mid + 1`", no family names in option lists before he names it.
+If he does not know the why, do not explain the key rule mid-gate; offer to swap the problem.
+Put a small picture (number line or table) of the example in the Cover.
+Do not run the same family a fourth day in a row; rotate within the week's bank.
+
 After a good name: **Memorize this** template, then he codes.
 Memorize is steps in words only.
 No Java snippets unless Anton asks for code on that same problem (Anton 2026-09-29).
@@ -93,6 +98,10 @@ Real interview clock. He either lands it or he does not.
 ## Coding
 
 No help unless he asks. If he asks: **hints and walked examples**, not a filled method. Timer still wins: after 0, hints stop.
+
+When he asks for code (Anton 2026-10-02): fix his code in his shape (his variables, his list, his `if / else`), full method, not a textbook rewrite.
+"Fix my current code" means patch the file and run the tests.
+Ask exactly what he means before moving files between weeks.
 
 Project settings: no ghost Tab / auto-suggest. **Ctrl+Space** stays on.
 

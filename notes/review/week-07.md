@@ -11,6 +11,8 @@ Week 7 covered three families: heap (top k / kth largest), binary search (sorted
 | 228 | Summary Ranges | Intervals (one walk with a run start) | O(n) / O(1) extra | overtime, coach-fixed |
 | 33 | Search in Rotated Sorted Array | Binary search (find the sorted half) | O(log n) / O(1) | on-time, coach gave the fix |
 | 153 | Find Minimum in Rotated Sorted Array | Binary search (mid vs high) | O(log n) / O(1) | on-time |
+| 452 | Minimum Number of Arrows to Burst Balloons | Intervals (sort by end, one walk) | O(n log n) / O(n) | time up, then overtime, coach-fixed |
+| 57 | Insert Interval | Intervals (before / overlap / after, one walk) | O(n) / O(n) for the output | no gate, no clock, coach-fixed |
 
 How to tell the three apart:
 
@@ -719,3 +721,248 @@ Named binary search; time and space same as #33.
 Before coding, the `mid` formula and index vs value had to be cleared up with a single-array table.
 Coded it himself from the six Memorize lines; all 7 green in about 8 minutes (on-time).
 Short step lists worked better than paragraphs today.
+
+---
+
+## LC 452 Minimum Number of Arrows to Burst Balloons — time up, then overtime, coach-fixed
+
+https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/
+
+### The problem
+
+Each pair `[xStart, xEnd]` is one balloon, a segment on the x-axis.
+An arrow is one point `x`.
+It pops every balloon with `xStart <= x <= xEnd` (ends count).
+Return the fewest arrows so that every balloon is popped.
+One arrow does not have to pop them all; you count how many you need in total.
+
+`[[10,16],[2,8],[1,6],[7,12]]` gives 2.
+An arrow at 6 pops `[1,6]` and `[2,8]`.
+An arrow at 11 pops `[7,12]` and `[10,16]`.
+
+```text
+x:      1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16
+[1,6]   |--------------|
+[2,8]      |-----------------|
+[7,12]                    |--------------|
+[10,16]                            |-----------------|
+              arrow at 6 ^          ^ arrow at 11
+```
+
+### The idea
+
+Pattern: intervals, sorted by **end**, then one walk.
+Take the balloon that ends first.
+Some arrow has to hit it, and the furthest-right spot that still hits it is its end.
+Shooting there pops it and as many later balloons as possible.
+Every balloon that starts at or before that end is popped by the same arrow.
+The first balloon that starts after it needs a new arrow, fired at its own end.
+What you keep while scanning: the position of the last arrow.
+Time O(n log n) for the sort; the walk is O(n).
+Extra space O(n): Java sorts an `int[][]` with TimSort, which can use up to n extra slots.
+
+### How to solve it
+
+1. Empty input: return 0.
+2. Sort by end: `Integer.compare(a[1], b[1])`.
+3. First arrow at the first balloon's end, count 1.
+4. Walk the rest.
+5. `start <= arrow`: already popped, do nothing.
+6. Else: new arrow at this balloon's end, count + 1.
+7. Return the count.
+
+Trace on the example, sorted by end: `[1,6] [2,8] [7,12] [10,16]`.
+
+| Balloon | start <= arrow? | arrow | count |
+|---|---|---|---|
+| `[1,6]` | first | 6 | 1 |
+| `[2,8]` | 2 <= 6, popped | 6 | 1 |
+| `[7,12]` | 7 > 6, new arrow | 12 | 2 |
+| `[10,16]` | 10 <= 12, popped | 12 | 2 |
+
+### Holes to patch
+
+**Did not get the question.**
+He read "fewest arrows to burst all" as "one arrow pops all of them," and did not see that each pair is one balloon.
+Rule: each pair is one segment, an arrow is one point, the answer is how many points you need.
+Draw the number line before coding.
+
+**Sorted by start instead of end.**
+Sorting by start breaks on nested balloons: `[[1,10],[2,3],[4,5]]`.
+Sorted by start, `[1,10]` comes first and its end (10) looks like a good arrow spot, but `[2,3]` and `[4,5]` do not overlap each other, so one arrow cannot pop both.
+Sorted by end, the order is `[2,3] [4,5] [1,10]`, giving an arrow at 3 and an arrow at 5, which is 2.
+Rule: when the question is "fewest points that hit every interval," sort by end.
+
+```java
+Arrays.sort(points, (a, b) -> Integer.compare(a[1], b[1]));
+```
+
+**Strict `<` on a closed range.**
+He used `x[0] < tmp[1]`.
+Breaks on `[[1,2],[2,3],[3,4],[4,5]]`: the arrow at 2 also pops `[2,3]`, but `2 < 2` is false, so it fired again (returned 4, answer 2).
+Rule: ends count, so the check is `start <= arrow`.
+
+**Kept adding balloons the arrow already popped.**
+His list grew in both branches: popped meant remove-then-add, not popped meant add.
+So `ret.size()` was close to the number of balloons, not arrows.
+Rule: the list (or a counter) means "arrows fired."
+A popped balloon changes nothing.
+
+**Mixed up merge (#56) and arrows (#452).**
+#56 merges overlapping intervals and extends the end.
+#452 counts points, and the arrow never moves once fired.
+Same family, different thing to keep.
+
+**Classic trap: `a[1] - b[1]` in the comparator.**
+With values near `Integer.MIN_VALUE` and `Integer.MAX_VALUE`, the subtraction overflows and sorts in the wrong order.
+Rule: always `Integer.compare`.
+
+### Memorize this
+
+1. Empty: return 0.
+2. Sort by end with `Integer.compare(a[1], b[1])`.
+3. `arrow = points[0][1]`, `count = 1`.
+4. For each next balloon: `start <= arrow` means popped, skip.
+5. Else `count++`, `arrow = end` of this balloon.
+6. Return `count`.
+7. O(n log n) time, O(n) space for the sort.
+
+```java
+public int findMinArrowShots(int[][] points) {
+    if (points.length == 0) return 0;
+    Arrays.sort(points, (a, b) -> Integer.compare(a[1], b[1]));
+    int arrows = 1;
+    int arrow = points[0][1];
+    for (int i = 1; i < points.length; i++) {
+        if (points[i][0] <= arrow) continue;
+        arrows++;
+        arrow = points[i][1];
+    }
+    return arrows;
+}
+```
+
+Say in the interview: I sort the balloons by end and shoot each arrow at the end of the first balloon it has to pop, because that point covers the most later balloons; any balloon that starts at or before the last arrow is already popped, otherwise I fire a new one.
+
+### How it went
+
+Dropped #162 Find Peak Element (more binary search after three days) for this one.
+Named intervals and sorting, O(n log n) and O(n) right.
+The question needed a number-line picture before it made sense, which ate part of the clock.
+Coded sort by start with a merge-style list; 4 of 7 green at the bell (time up).
+After the bell he asked for code; the coach patched his own loop (sort by end, `<=`, add only on a new arrow); all 7 green (overtime, coach-fixed).
+
+---
+
+## LC 57 Insert Interval — no gate, no clock, coach-fixed
+
+https://leetcode.com/problems/insert-interval/
+
+### The problem
+
+You get ranges `[start, end]`, already sorted by start, with no overlaps.
+Put one new range in so the list stays sorted with no overlaps.
+Any ranges the new one touches or overlaps join into one.
+
+`[[1,3],[6,9]]` plus `[2,5]` gives `[[1,5],[6,9]]`.
+`[[1,2],[3,5],[6,7],[8,10],[12,16]]` plus `[4,8]` gives `[[1,2],[3,10],[12,16]]`.
+
+### The idea
+
+Pattern: intervals, one walk, no sort needed (the input is already sorted).
+Every existing range falls into exactly one of three groups compared to the new range:
+fully before it (`x.end < new.start`), fully after it (`x.start > new.end`), or overlapping.
+Before: copy it.
+Overlapping: grow the new range to `[min(starts), max(ends)]` and do not copy `x`.
+After: the new range is final, so add it once, then copy `x`.
+What you keep while scanning: the new range as it grows, and whether it was already placed.
+Time O(n): one pass.
+Extra space O(n) for the output list.
+
+### How to solve it
+
+1. Empty result list, `placed = false`.
+2. For each range `x`:
+3. `x[1] < new[0]`: add `x`.
+4. `x[0] > new[1]`: if not placed, add `new` and mark placed; then add `x`.
+5. Else (overlap): `new = [min(x[0], new[0]), max(x[1], new[1])]`.
+6. After the loop: if not placed, add `new`.
+7. Copy the list into `int[][]`.
+
+Trace on `[[1,2],[3,5],[6,7],[8,10],[12,16]]` with new `[4,8]`:
+
+| x | group | new | result so far |
+|---|---|---|---|
+| `[1,2]` | before (2 < 4) | `[4,8]` | `[1,2]` |
+| `[3,5]` | overlap | `[3,8]` | `[1,2]` |
+| `[6,7]` | overlap | `[3,8]` | `[1,2]` |
+| `[8,10]` | overlap (8 <= 8) | `[3,10]` | `[1,2]` |
+| `[12,16]` | after (12 > 10), place new | `[3,10]` | `[1,2] [3,10] [12,16]` |
+
+### Holes to patch
+
+**Empty input returned empty.**
+`intervals = []`, new `[5,7]` must give `[[5,7]]`, not `[]`.
+Rule: the new range always ends up in the answer.
+
+**`if (ret.isEmpty()) ret.add(x);` without `else`.**
+The first range was added, then the code below added it again.
+Rule: one range, one branch; use `if / else if / else`.
+
+**Overlap check only caught one shape.**
+He tested `new.start <= x.end && new.end >= x.end`, which misses a new range sitting inside `x`.
+Breaks on `[[1,10]]` plus `[3,4]`: returned two ranges instead of `[[1,10]]`.
+Rule: two ranges overlap when neither ends before the other starts: `new.start <= x.end && new.end >= x.start`.
+
+**Merged end was always `new.end`.**
+Breaks on the same `[1,10]` plus `[3,4]`: the end must stay 10.
+Rule: merged range is `[min(starts), max(ends)]`.
+
+```java
+tmp[0] = Math.min(x[0], newInterval[0]);
+tmp[1] = Math.max(x[1], newInterval[1]);
+```
+
+**`ret.remove(ret.size() - 1)` on merge.**
+It deletes whatever was last, even a range that had nothing to do with the new one.
+Rule: do not put the new range in the list until it stops growing (the first "after" range, or the end of the loop).
+
+**New range never added when nothing overlapped it.**
+Breaks on `[[1,2],[7,8]]` plus `[4,5]`: the answer was missing `[4,5]`.
+Rule: a `placed` flag; add before the first "after" range, or after the loop.
+
+### Memorize this
+
+1. Result list, `placed = false`.
+2. `x.end < new.start`: copy `x`.
+3. `x.start > new.end`: place `new` once, then copy `x`.
+4. Else: `new = [min starts, max ends]`.
+5. After the loop, place `new` if not placed.
+6. O(n) time, O(n) output.
+
+```java
+public int[][] insert(int[][] intervals, int[] newInterval) {
+    List<int[]> ret = new ArrayList<>();
+    boolean placed = false;
+    for (int[] x : intervals) {
+        if (x[1] < newInterval[0]) {
+            ret.add(x);
+        } else if (x[0] > newInterval[1]) {
+            if (!placed) { ret.add(newInterval); placed = true; }
+            ret.add(x);
+        } else {
+            newInterval = new int[]{Math.min(x[0], newInterval[0]), Math.max(x[1], newInterval[1])};
+        }
+    }
+    if (!placed) ret.add(newInterval);
+    return ret.toArray(new int[0][]);
+}
+```
+
+Say in the interview: the list is already sorted, so I walk it once; ranges that end before the new one are copied, ranges that overlap are folded into it with min start and max end, and the first range that starts after it is where I drop the merged range in.
+
+### How it went
+
+Skipped the gate and the clock and went straight to code (about 45 minutes).
+2 of 9 green: empty input, a double add on the first range, a one-shape overlap check, and the new range missing when nothing overlapped.
+Asked the coach to fix his code; the patch kept his list, `tmp`, and `newInterval = tmp`; all 9 green (coach-fixed, untimed).
