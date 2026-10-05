@@ -11,6 +11,7 @@ Each problem has: the problem, the idea, how to solve it with a small trace, hol
 | 5 | Linked lists | [week-05.md](week-05.md) |
 | 6 | Trees (DFS / BFS / BST) | [week-06.md](week-06.md) |
 | 7 | Heap, binary search, intervals | [week-07.md](week-07.md) |
+| 8 | Graph, DP classics | [week-08.md](week-08.md) |
 
 The clock only started in Week 5 Day 4.
 Weeks 3 and 4 and early Week 5 say "passed (no clock)" instead of on-time or overtime.

@@ -77,7 +77,7 @@ Run from **repo root**:
 Wrong name → bounce (example: sliding window on “nth from end of list” is a **gap of n** between two walkers). Do not hand the memorize line until the name matches.
 
 No indirect hints either (Anton 2026-10-02): no "each step must halve", no "compare `mid` with `mid + 1`", no family names in option lists before he names it.
-If he does not know the why, do not explain the key rule mid-gate; offer to swap the problem.
+If he does not know the why, do not explain the key rule mid-gate; offer to swap the problem. If he says no and asks to learn it (Anton 2026-10-05), explain with a picture + Memorize steps, write the code if he asks, and mark it coach-written, untimed.
 Put a small picture (number line or table) of the example in the Cover.
 Do not run the same family a fourth day in a row; rotate within the week's bank.
 
