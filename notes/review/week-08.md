@@ -1,12 +1,15 @@
 # Week 08 — review sheet
 
 Week 8 covers two families: graph (grid walks, dependencies) and DP classics (build the answer from smaller answers).
+It also has one design problem, LRU Cache.
 
 | # | Problem | Pattern | Time / space | Result |
 |---|---|---|---|---|
 | 200 | Number of Islands | Graph (DFS flood fill on a grid) | O(rows × cols) / O(rows × cols) | coach-written, untimed |
 | 70 | Climbing Stairs | DP (Fibonacci) | O(n) / O(n) table (O(1) with two variables) | on-time |
 | 207 | Course Schedule | Graph (topological sort, Kahn's BFS) | O(V + E) / O(V + E) | coach-written, untimed |
+| 198 | House Robber | DP (skip or take) | O(n) / O(n) table (O(1) with two variables) | coach-written, untimed |
+| 146 | LRU Cache | Design: HashMap + doubly linked list | O(1) per call / O(capacity) | coach-written, untimed |
 
 How to tell them apart:
 
@@ -15,6 +18,7 @@ How to tell them apart:
 | A grid of cells, "connected", "islands", "regions" | Graph walk (DFS or BFS), mark visited |
 | "A before B", "prerequisites", "can you finish / order" | Graph, topological sort (loop = impossible) |
 | "How many ways", "best total", and step n depends on smaller steps | DP |
+| "Cache", "evict the oldest / least recently used", O(1) per call | HashMap for lookup + doubly linked list for order |
 
 ---
 
@@ -318,3 +322,265 @@ Say in the interview: courses are nodes and prerequisites are edges; I take ever
 Named "graph" but did not know the why or how to code it.
 Asked the coach to write it like Islands so he could study it.
 Coach-written, 8 of 8, untimed.
+
+---
+
+## LC 198 House Robber — coach-written, untimed
+
+https://leetcode.com/problems/house-robber/
+
+### The problem
+
+Houses stand in a row, and `nums[i]` is the money in house `i`.
+You cannot take from two houses next to each other.
+Return the most money you can take.
+
+```
+index:   0   1   2   3   4
+money:   2   7   9   3   1
+take:    x       x       x    -> 2 + 9 + 1 = 12
+```
+
+### The idea
+
+Pattern: DP, the same skeleton as Climbing Stairs.
+At house `i` there are only two choices.
+Skip it: the best stays `best[i-1]`.
+Take it: you cannot have taken `i-1`, so it is `nums[i] + best[i-2]`.
+So `best[i] = max(best[i-1], nums[i] + best[i-2])`.
+`best[i]` is the most money from houses `0..i`.
+Time O(n): one pass.
+Extra space O(n) for the table; O(1) with two variables, since only the last two cells are read.
+
+### How to solve it
+
+1. One house: return `nums[0]`.
+2. `best = new int[nums.length]`.
+3. `best[0] = nums[0]`, `best[1] = max(nums[0], nums[1])`.
+4. For `i` from 2: `best[i] = max(best[i-1], nums[i] + best[i-2])`.
+5. Return the last cell.
+
+| i | nums[i] | skip = best[i-1] | take = nums[i] + best[i-2] | best[i] |
+|---|---|---|---|---|
+| 0 | 2 | — | 2 | 2 |
+| 1 | 7 | 2 | 7 | 7 |
+| 2 | 9 | 7 | 9 + 2 = 11 | 11 |
+| 3 | 3 | 11 | 3 + 7 = 10 | 11 |
+| 4 | 1 | 11 | 1 + 11 = 12 | 12 |
+
+### Holes to patch
+
+**Did not see it was the Climbing Stairs skeleton.**
+He did not know the pattern at the gate, and after seeing the code said "it is the same as Stairs".
+The numbers do not show it; the question does.
+Rule: ask "what are my choices at `i`, and which smaller answers do they use?"
+Here: skip uses `i-1`, take uses `i-2`.
+
+**Why the formula never takes two neighbours.**
+He asked how `nums[i] + best[i-2]` keeps houses apart.
+`best[i-2]` only covers houses `0..i-2`, so house `i-1` is never in the "take" total.
+The "skip" total `best[i-1]` never has house `i` in it.
+On `[2, 7, 9]`: take = 9 + 2 (houses 0 and 2), skip = 7 (house 1); 7 and 9 are never added.
+
+**`best[1]` is the bigger of the first two, not `nums[1]`.**
+On `[2, 1, 1, 2]`, `best[1] = nums[1] = 1` would end with 3; the right answer is 4 (houses 0 and 3).
+
+**Greedy fails.**
+At `i = 3` above, taking the 3 gives 10 and loses to skipping (11).
+Picking the bigger neighbour each time does not work; you must compare both totals.
+
+### Memorize this
+
+1. One house → `nums[0]`.
+2. Table `best` of length n.
+3. `best[0] = nums[0]`, `best[1] = max(nums[0], nums[1])`.
+4. Loop from 2: `best[i] = max(best[i-1], nums[i] + best[i-2])`.
+5. Return `best[n-1]`.
+
+```java
+public int rob(int[] nums) {
+    if (nums.length == 1) return nums[0];
+    int[] best = new int[nums.length];
+    best[0] = nums[0];
+    best[1] = Math.max(nums[0], nums[1]);
+    for (int i = 2; i < nums.length; i++) {
+        best[i] = Math.max(best[i - 1], nums[i] + best[i - 2]);
+    }
+    return best[nums.length - 1];
+}
+```
+
+Say in the interview: at each house I either skip it and keep the best so far, or take it and add the best from two houses back, so best[i] is the max of those two; one pass, O(n) time, and O(1) space if I keep only the last two values.
+
+Cousin: #213 House Robber II (houses in a circle): run this twice, once without the last house and once without the first, and take the bigger.
+
+### How it went
+
+Did not know the pattern at the gate.
+Chose to learn instead of swapping; coach explained with the trace and wrote it in his Climbing Stairs shape.
+Coach-written, 6 of 6, untimed.
+
+---
+
+## LC 146 LRU Cache — coach-written, untimed
+
+https://leetcode.com/problems/lru-cache/
+
+### The problem
+
+Build a cache with a fixed capacity.
+`get(key)` returns the value, or `-1` if the key is missing.
+`put(key, value)` adds or updates; if the cache goes over capacity, remove the least recently used key.
+Both must be O(1) on average.
+`get` counts as a use.
+
+| Call | Result | Order after (old → new) |
+|---|---|---|
+| `put(1,1)` | | 1 |
+| `put(2,2)` | | 1, 2 |
+| `get(1)` | 1 | 2, 1 |
+| `put(3,3)` | removes 2 | 1, 3 |
+| `get(2)` | -1 | 1, 3 |
+
+### The idea
+
+Pattern: HashMap + doubly linked list.
+The map holds `key → node`, so any key is found in O(1).
+The list holds the order of use: oldest at the head, newest at the tail.
+Each node has `prev` and `next`, so a node can be cut out of the middle in O(1) with no scan.
+Two dummy nodes, `head` and `tail`, remove every null check at the ends.
+Time O(1) per call: a map lookup plus a few pointer changes.
+Extra space O(capacity) for the map and the nodes.
+
+### How to solve it
+
+1. `Node` holds `key`, `value`, `prev`, `next`.
+2. Fields: `capacity`, `HashMap<Integer, Node>`, dummy `head` and `tail` linked to each other.
+3. `remove(node)`: its prev and next point past it.
+4. `addToTail(node)`: insert just before `tail`.
+5. `get`: missing → `-1`; else remove, add to tail, return value.
+6. `put` on an existing key: update value, remove, add to tail.
+7. `put` on a new key: new node, into the map, add to tail; if the map is over capacity, `lru = head.next`, remove it from the list and the map.
+
+```
+put(1,1)  head ⇄ [1] ⇄ tail
+put(2,2)  head ⇄ [1] ⇄ [2] ⇄ tail
+get(1)    head ⇄ [2] ⇄ [1] ⇄ tail      cut 1, add at tail
+put(3,3)  head ⇄ [1] ⇄ [3] ⇄ tail      over capacity: evict head.next (2)
+```
+
+### Holes to patch
+
+**`get` does not remove.**
+He asked if `get` removes from the cache.
+It returns the value and moves the key to the newest end; the key stays.
+
+**HashMap alone was right for lookup, not for order.**
+He had the HashMap for `get`.
+A map has no "oldest" in O(1), so a second structure must hold the order.
+
+**Stack for the order.**
+The key to evict is the oldest, at the bottom, and a Stack only gives the top.
+`get` on a key in the middle means digging it out: O(n).
+Rule: the order structure must remove from the middle and add at the end in O(1).
+
+**PriorityQueue for the order.**
+Sorted by last-used time, `add` and `poll` are O(log n), and `remove(key)` from the middle is O(n).
+Not O(1).
+
+**The node must keep its key.**
+On eviction you have the node `head.next`, but you must also remove it from the map: `map.remove(lru.key)`.
+Without the key in the node, the map keeps a stale entry and `get` returns an evicted value.
+
+**Pointer order in `addToTail`.**
+Set `node.prev = tail.prev` and `node.next = tail` first, then `tail.prev.next = node`, then `tail.prev = node`.
+Changing `tail.prev` first loses the old last node.
+
+**Interview shortcut.**
+`LinkedHashMap(capacity, 0.75f, true)` with `removeEldestEntry` does this in a few lines.
+Say it, then expect to build it by hand.
+
+### Memorize this
+
+1. `Node(key, value, prev, next)`.
+2. Map `key → node`, dummy `head` ⇄ `tail`.
+3. `remove(node)`: join its neighbours.
+4. `addToTail(node)`: insert before `tail`.
+5. `get`: missing → -1; else move to tail, return value.
+6. `put`: exists → update and move to tail; new → add to map and tail, over capacity → evict `head.next` from list and map.
+
+```java
+public class LRUCache {
+
+    private static class Node {
+        int key;
+        int value;
+        Node prev;
+        Node next;
+
+        Node(int key, int value) {
+            this.key = key;
+            this.value = value;
+        }
+    }
+
+    private final int capacity;
+    private final Map<Integer, Node> map = new HashMap<>();
+    private final Node head = new Node(0, 0);
+    private final Node tail = new Node(0, 0);
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int key) {
+        Node node = map.get(key);
+        if (node == null) return -1;
+        remove(node);
+        addToTail(node);
+        return node.value;
+    }
+
+    public void put(int key, int value) {
+        Node node = map.get(key);
+        if (node != null) {
+            node.value = value;
+            remove(node);
+            addToTail(node);
+            return;
+        }
+        node = new Node(key, value);
+        map.put(key, node);
+        addToTail(node);
+        if (map.size() > capacity) {
+            Node lru = head.next;
+            remove(lru);
+            map.remove(lru.key);
+        }
+    }
+
+    private void remove(Node node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+
+    private void addToTail(Node node) {
+        node.prev = tail.prev;
+        node.next = tail;
+        tail.prev.next = node;
+        tail.prev = node;
+    }
+}
+```
+
+Say in the interview: a HashMap finds the node in O(1) and a doubly linked list keeps the use order, newest at the tail; every get or put moves the node to the tail, and when I go over capacity I evict head.next from both, so each call is O(1).
+
+Cousin: #460 LFU Cache (evict the least frequently used; Hard).
+
+### How it went
+
+Had the HashMap for lookup; tried a Stack, then a PriorityQueue, for the order.
+Chose to learn instead of swapping; coach explained with the picture and wrote it.
+Coach-written, 5 of 5, untimed.
