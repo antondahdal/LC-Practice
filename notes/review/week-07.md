@@ -4,13 +4,14 @@ Week 7 covered three families: heap (top k / kth largest), binary search (sorted
 
 | # | Problem | Pattern | Time / space | Result |
 |---|---|---|---|---|
-| 347 | Top K Frequent Elements | Heap (min-heap of size k over counts) | O(n log k) / O(n) | on-time |
+| 347 | Top K Frequent Elements | Heap (max-heap of all keys by count) | O(n log n) / O(n) | on-time |
 | 35 | Search Insert Position | Binary search | O(log n) / O(1) | time up, coach-fixed |
-| 215 | Kth Largest Element in an Array | Heap (min-heap of size k) | O(n log k) / O(k) | overtime, coach-fixed |
+| 215 | Kth Largest Element in an Array | Heap (max-heap of all numbers) | O(n log n) / O(n) | overtime, coach-fixed |
 | 56 | Merge Intervals | Intervals (sort by start, one walk) | O(n log n) / O(n) | overtime |
-| 228 | Summary Ranges | Intervals (one walk with a run start) | O(n) / O(1) extra | overtime, coach-fixed |
+| 228 | Summary Ranges | Intervals (one walk, open run in a stack) | O(n) / O(n) extra for the stack | overtime, coach-fixed |
 | 33 | Search in Rotated Sorted Array | Binary search (find the sorted half) | O(log n) / O(1) | on-time, coach gave the fix |
 | 153 | Find Minimum in Rotated Sorted Array | Binary search (mid vs high) | O(log n) / O(1) | on-time |
+| 74 | Search a 2D Matrix | Binary search (matrix as one flat array) | O(log(m × n)) / O(1) | green, no clock record |
 | 452 | Minimum Number of Arrows to Burst Balloons | Intervals (sort by end, one walk) | O(n log n) / O(n) | time up, then overtime, coach-fixed |
 | 57 | Insert Interval | Intervals (before / overlap / after, one walk) | O(n) / O(n) for the output | no gate, no clock, coach-fixed |
 
@@ -42,29 +43,29 @@ Pattern: heap, on top of a count map.
 First count every value in a `HashMap` (value → count).
 Then you need the `k` keys with the biggest counts, which is a "top k" question, so a heap.
 The heap holds the **keys**, and its comparator looks up each key's count in the map.
-Keep a **min**-heap of size `k`: the top is the weakest of the current top `k`, so when the heap grows past `k` you poll it out.
-Time O(n log k): counting is O(n), and each of at most n distinct keys costs one `offer` into a heap that never holds more than k + 1 keys.
-Extra space O(n): the map can hold n distinct keys, and the heap holds k.
+His version is a **max**-heap of every key: the biggest count is on top, so `k` polls give the `k` most frequent keys.
+Time O(n log n): counting is O(n), and each of up to n distinct keys costs one log n insert, then k polls.
+Extra space O(n): the map and the heap can each hold n distinct keys.
 
-Bucket sort by count (an array of lists where the index is the count, walked from the top) is O(n) and also beats the follow-up.
+A **min**-heap capped at size `k` (poll when it grows past `k`) is O(n log k) and beats the follow-up.
+Bucket sort by count (an array of lists where the index is the count, walked from the top) is O(n).
 
 ### How to solve it
 
-1. Count: `count.merge(x, 1, Integer::sum)` for every `x`.
-2. Make a min-heap of keys ordered by `count.get(key)`.
-3. For each key: `offer` it, and if the size is now `k + 1`, `poll` once.
-4. The heap now holds exactly the `k` most frequent keys.
-5. Poll them into the result array.
+1. Count every `x`: if the map has it, add 1; if not, put 1.
+2. Make a max-heap of keys with the comparator `map.get(b) - map.get(a)`.
+3. After counting, `addAll(map.keySet())` into the heap.
+4. Poll `k` times into `ret`.
 
 Trace on `[1,1,1,2,2,3]`, `k = 2`, counts `{1:3, 2:2, 3:1}`:
 
-| offer key | its count | heap after offer (smallest count on top) | size > k? | heap after |
-|---|---|---|---|---|
-| 1 | 3 | 1(3) | no | 1(3) |
-| 2 | 2 | 2(2), 1(3) | no | 2(2), 1(3) |
-| 3 | 1 | 3(1), 2(2), 1(3) | yes, poll 3 | 2(2), 1(3) |
+| step | heap (biggest count on top) | polled | ret |
+|---|---|---|---|
+| addAll | 1(3), 2(2), 3(1) | — | `[_, _]` |
+| i = 0 | 2(2), 3(1) | 1 | `[1, _]` |
+| i = 1 | 3(1) | 2 | `[1, 2]` |
 
-Left in the heap: keys 2 and 1, the answer.
+Key 3 stays in the heap; `ret` is the answer.
 
 ### Holes to patch
 
@@ -79,7 +80,7 @@ The heap stores keys; the comparator reads the map.
 Fill the map first, then offer; a count that changes after the key is in the heap does not move it.
 
 ```java
-new PriorityQueue<Integer>((a, b) -> count.get(a) - count.get(b)); // lowest count on top
+PriorityQueue<Integer> max = new PriorityQueue<>((a, b) -> map.get(b) - map.get(a));
 ```
 
 **Heap cost: one `offer` is log(size), not the whole solution.**
@@ -95,39 +96,42 @@ Only the top is ordered, so `System.out.println(pq)` does not print sorted order
 
 **Counting in two `if`s.**
 He wrote a `containsKey` branch plus a second `!containsKey` branch.
-One line does it.
-
-```java
-map.put(x, map.getOrDefault(x, 0) + 1);
-```
+One line with `getOrDefault` does the same count.
 
 ### Memorize this
 
 1. Count values in a `HashMap`.
-2. Min-heap of keys, comparator = count from the map.
-3. Offer each key; if size > k, poll.
-4. The heap is the answer; poll it into an array.
-5. O(n log k) time, O(n) space.
-6. Follow-up O(n): bucket by count, walk buckets from the top.
+2. Max-heap of keys, comparator `map.get(b) - map.get(a)`.
+3. After counting, add all keys to the heap.
+4. Poll `k` times into the result array.
+5. O(n log n) time, O(n) space.
+6. Follow-up: min-heap capped at k is O(n log k); bucket by count is O(n).
 
 ```java
 public int[] topKFrequent(int[] nums, int k) {
-    Map<Integer, Integer> count = new HashMap<>();
-    for (int x : nums) count.merge(x, 1, Integer::sum);
+    int[] ret=new int[k];
 
-    PriorityQueue<Integer> heap = new PriorityQueue<>(Comparator.comparingInt(count::get));
-    for (int key : count.keySet()) {
-        heap.offer(key);
-        if (heap.size() > k) heap.poll();
+    HashMap<Integer,Integer> map=new HashMap<>();
+    PriorityQueue<Integer> max = new PriorityQueue<>((a, b) -> map.get(b) - map.get(a));
+    for(int x:nums){
+        if(map.containsKey(x)){
+            int tmpval=map.get(x);
+            tmpval++;
+            map.put(x, tmpval);
+        }
+        if(!map.containsKey(x)) map.put(x, 1);
+    }
+    max.addAll(map.keySet());
+    System.out.println(max);
+    for(int i=0;i<k;i++){
+        ret[i]=max.poll();
     }
 
-    int[] res = new int[k];
-    for (int i = k - 1; i >= 0; i--) res[i] = heap.poll();
-    return res;
+    return ret;
 }
 ```
 
-Say in the interview: I count with a hash map, then keep a min-heap of size k keyed by count, so each key costs log k and the heap ends up holding exactly the k most frequent values.
+Say in the interview: I count with a hash map, put the keys in a max-heap ordered by count, and poll k times; if they want better than n log n, I cap a min-heap at size k instead.
 
 ### How it went
 
@@ -153,29 +157,31 @@ It must run in O(log n).
 
 Pattern: binary search.
 The array is sorted, so one look at the middle tells you which half the answer is in.
-You keep two indices, `lo` and `hi`, and the live range is `lo..hi` with both ends included.
-Every round keeps a promise: everything left of `lo` is smaller than the target, and everything right of `hi` is bigger.
-When the loop ends, `lo = hi + 1`, so `lo` is the first index bigger than the target, which is exactly the insert slot.
+You keep two indices, `low` and `high`, and the live range is `low..high` with both ends included.
+Every round keeps a promise: everything left of `low` is smaller than the target, and everything right of `high` is bigger.
+When the loop ends, `low = high + 1`, so `low` is the first index bigger than the target, which is exactly the insert slot.
 Time O(log n), because each round throws away half the range.
 Extra space O(1), because it is only three `int`s.
 
 ### How to solve it
 
-1. `lo = 0`, `hi = n - 1`.
-2. While `lo <= hi`, compute `mid = lo + (hi - lo) / 2`.
-3. One decision per round, as one `if / else if / else` chain.
-4. If `nums[mid] == target`, return `mid`.
-5. If `nums[mid] < target`, the answer is right of `mid`: `lo = mid + 1`.
-6. Otherwise it is left of `mid`: `hi = mid - 1`.
-7. After the loop, return `lo`.
+1. Guards: null or empty returns -1; target bigger than the last value returns `nums.length`.
+2. `low = 0`, `high = n - 1`.
+3. While `low <= high`, compute `mid = low + (high - low) / 2`.
+4. One decision per round, as one `if / else if / else` chain.
+5. If `nums[mid] == target`, return `mid`.
+6. If `nums[mid] < target`, the answer is right of `mid`: `low = mid + 1`.
+7. Otherwise it is left of `mid`: `high = mid - 1`.
+8. After the loop, return `low`.
 
 Trace on `[-5, -3]`, target -4 (the case his sign patch got wrong):
 
-| lo | hi | mid | nums[mid] | decision |
+| low | high | mid | nums[mid] | decision |
 |---|---|---|---|---|
-| 0 | 1 | 0 | -5 | -5 < -4, so `lo = 1` |
-| 1 | 1 | 1 | -3 | -3 > -4, so `hi = 0` |
-| 1 | 0 | — | — | `lo > hi`, return `lo` = 1 |
+| — | — | — | — | guard: -3 < -4? no, go on |
+| 0 | 1 | 0 | -5 | -5 < -4, so `low = 1` |
+| 1 | 1 | 1 | -3 | -3 > -4, so `high = 0` |
+| 1 | 0 | — | — | `low > high`, return `low` = 1 |
 
 Left of index 1 is -5 (smaller), index 1 onwards is -3 (bigger), so -4 goes at 1.
 The sign of the target never matters; only the compare does.
@@ -200,9 +206,9 @@ Breaks on `[1,3,5,6]`, target 5: `mid = 1`, 3 < 5 sets `lo = 2`, then the `else`
 Rule: exactly one branch runs per round.
 
 ```java
-if (nums[mid] == target) return mid;
-else if (nums[mid] < target) lo = mid + 1;
-else hi = mid - 1;
+if(nums[mid]==target) return mid;
+else if(nums[mid]<target) low=mid+1;
+else high= mid-1;
 ```
 
 **Patching the answer to fit a failing test.**
@@ -212,31 +218,35 @@ Rule: when one test fails, trace it and find the bug; never shape the return val
 
 **Special cases that `return lo` already covers.**
 His final code still checks "target past the end" before the loop and returns -1 for an empty array.
-On target 7 in `[1,3,5,6]`, `lo` walks to 4 on its own, and on an empty array `lo` stays 0, which is the correct insert slot.
-Rule: trust the invariant; `return lo` handles before-the-start, past-the-end, and empty.
+On target 7 in `[1,3,5,6]`, `low` walks to 4 on its own, and on an empty array `low` stays 0, which is the correct insert slot.
+His -1 for an empty array is wrong in principle (the insert slot is 0); LeetCode never sends an empty array, so the tests do not catch it.
+Rule: trust the invariant; `return low` handles before-the-start, past-the-end, and empty.
 
 ### Memorize this
 
-1. `lo = 0`, `hi = n - 1`, loop while `lo <= hi`.
-2. `mid = lo + (hi - lo) / 2` (no overflow).
-3. One chain: equal → return, less → `lo = mid + 1`, else → `hi = mid - 1`.
-4. `mid` was checked, so it always leaves the range (`± 1`).
-5. Not found → return `lo`.
+1. Guards: empty → -1, target past the last value → `nums.length`.
+2. `low = 0`, `high = n - 1`, loop while `low <= high`.
+3. `mid = low + (high - low) / 2` (no overflow).
+4. One chain: equal → return, less → `low = mid + 1`, else → `high = mid - 1`.
+5. `mid` was checked, so it always leaves the range (`± 1`).
+6. Not found → return `low`.
 
 ```java
 public int searchInsert(int[] nums, int target) {
-    int lo = 0, hi = nums.length - 1;
-    while (lo <= hi) {
-        int mid = lo + (hi - lo) / 2;
-        if (nums[mid] == target) return mid;
-        else if (nums[mid] < target) lo = mid + 1;
-        else hi = mid - 1;
+    if (nums==null||nums.length==0) return -1;
+    if(nums[nums.length-1]<target) return nums.length;
+    int low=0,high=nums.length-1;
+    while(low<=high){
+        int mid = low + (high - low) / 2;
+        if(nums[mid]==target) return mid;
+        else if(nums[mid]<target) low=mid+1;
+        else high= mid-1;
     }
-    return lo;
+    return low;
 }
 ```
 
-Say in the interview: it is a standard binary search, and when the target is missing the loop ends with `lo` at the first element bigger than the target, which is the insert position.
+Say in the interview: it is a standard binary search, and when the target is missing the loop ends with `low` at the first element bigger than the target, which is the insert position.
 
 ### How it went
 
@@ -260,31 +270,30 @@ Return the kth largest element in sorted order; duplicates count separately.
 ### The idea
 
 Pattern: heap, holding the numbers themselves (no map).
-Keep a **min**-heap of the `k` biggest numbers seen so far.
-When it grows past `k`, poll: that throws out the smallest, the weakest of the strong ones.
-At the end the top of the heap is the smallest of the `k` biggest, which is the kth largest.
-Time O(n log k), because each of the n numbers costs one `offer` (and at most one `poll`) on a heap of size k + 1.
-Extra space O(k), because the heap never holds more than k + 1 numbers.
+His version is a **max**-heap (`Collections.reverseOrder()`) of every number.
+The biggest is on top, so the kth `poll` returns the kth largest.
+Time O(n log n): n offers at log n each, then k polls.
+Extra space O(n), because the heap holds every number.
+
+A **min**-heap capped at size `k` (poll when it grows past `k`, return `peek()`) is O(n log k) time and O(k) space.
 
 ### How to solve it
 
-1. Make a min-heap (`new PriorityQueue<>()`, the default).
-2. For each number: `offer` it.
-3. If the size is now `k + 1`, `poll` once.
-4. Return `peek()`.
+1. Guards: empty or `k > nums.length` returns 0; one number returns it.
+2. Make a max-heap: `new PriorityQueue<>(Collections.reverseOrder())`.
+3. Offer every number.
+4. Poll `k` times (`i < k`).
+5. On the last poll (`i == k - 1`), keep the value in `retVal` and return it.
 
 Trace on `[3,2,1,5,6,4]`, `k = 2`:
 
-| offer | heap after offer (smallest on top) | size > 2? | heap after |
+| step | heap (biggest on top) | polled | retVal |
 |---|---|---|---|
-| 3 | 3 | no | 3 |
-| 2 | 2 3 | no | 2 3 |
-| 1 | 1 2 3 | yes, poll 1 | 2 3 |
-| 5 | 2 3 5 | yes, poll 2 | 3 5 |
-| 6 | 3 5 6 | yes, poll 3 | 5 6 |
-| 4 | 4 5 6 | yes, poll 4 | 5 6 |
+| offer all | 6 5 4 3 2 1 | — | 0 |
+| i = 0 | 5 4 3 2 1 | 6 | 0 |
+| i = 1 (= k - 1) | 4 3 2 1 | 5 | 5 |
 
-`peek()` is 5, the 2nd largest.
+`retVal` is 5, the 2nd largest.
 
 ### Holes to patch
 
@@ -307,25 +316,35 @@ Rule: n offers × log(heap size); cap the heap at k to get O(n log k) and O(k).
 
 ### Memorize this
 
-1. Min-heap, default order.
-2. Offer each number.
-3. If size > k, poll (drops the smallest).
-4. Return `peek()`.
-5. O(n log k) time, O(k) space.
-6. Quickselect is O(n) on average if they push further.
+1. Max-heap with `Collections.reverseOrder()`.
+2. Offer every number.
+3. Poll `k` times with `i < k`.
+4. The last poll is the answer.
+5. O(n log n) time, O(n) space.
+6. Better: min-heap capped at k is O(n log k) / O(k); quickselect is O(n) on average.
 
 ```java
 public int findKthLargest(int[] nums, int k) {
-    PriorityQueue<Integer> heap = new PriorityQueue<>();
-    for (int x : nums) {
-        heap.offer(x);
-        if (heap.size() > k) heap.poll();
+    if(nums.length==0||k>nums.length) return 0;
+    if(nums.length==1) return nums[0];
+    int retVal=0;
+    PriorityQueue<Integer> max = new PriorityQueue<>(Collections.reverseOrder());
+    for(int x:nums){
+        max.offer(x);
     }
-    return heap.peek();
+
+    for(int i=0;i<k;i++){
+        int tmp=max.poll();
+        if(i==k-1){
+            retVal=tmp;
+            System.out.println(retVal);
+        }
+    }
+    return retVal;
 }
 ```
 
-Say in the interview: I keep a min-heap of the k largest numbers, so the top is always the kth largest, and each number costs log k.
+Say in the interview: I put every number in a max-heap and poll k times, so the kth poll is the kth largest; to get n log k I would keep a min-heap of size k instead.
 
 ### How it went
 
@@ -357,20 +376,21 @@ Extra space O(n) for the result list.
 ### How to solve it
 
 1. Sort by start: `Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]))`.
-2. Put the first pair in a `List<int[]>`.
-3. For every next pair, look at the last kept one (`list.get(list.size() - 1)`).
-4. If next start ≤ last end, they overlap: last end becomes the **bigger** of the two ends.
-5. Otherwise it is a new group: add the pair.
-6. Return `list.toArray(new int[0][])`.
+2. Walk `i` over the sorted pairs; if `list` is empty, add the pair.
+3. Otherwise look at the last kept one, `tmpPair = list.get(list.size()-1)`.
+4. If `tmpPair[1] >= pair[0]` (next start ≤ last end), they overlap.
+5. On overlap, build `newPair = [tmpPair[0], max(tmpPair[1], pair[1])]`, remove the last pair, and add `newPair`.
+6. Otherwise it is a new group: add the pair.
+7. Return `list.toArray(new int[list.size()][])`.
 
 Trace on `[[1,10],[2,3],[4,12],[15,18]]` (already sorted):
 
-| next pair | last kept | overlap? (next start ≤ last end) | action | result |
+| pair | tmpPair | overlap? (tmpPair[1] >= pair[0]) | action | list |
 |---|---|---|---|---|
-| `[1,10]` | — | — | add | `[1,10]` |
-| `[2,3]` | `[1,10]` | 2 ≤ 10 yes | end = max(10, 3) = 10 | `[1,10]` |
-| `[4,12]` | `[1,10]` | 4 ≤ 10 yes | end = max(10, 12) = 12 | `[1,12]` |
-| `[15,18]` | `[1,12]` | 15 ≤ 12 no | add | `[1,12]`, `[15,18]` |
+| `[1,10]` | — | — | list empty, add | `[1,10]` |
+| `[2,3]` | `[1,10]` | 10 ≥ 2 yes | replace last with `[1, max(10, 3)]` | `[1,10]` |
+| `[4,12]` | `[1,10]` | 10 ≥ 4 yes | replace last with `[1, max(10, 12)]` | `[1,12]` |
+| `[15,18]` | `[1,12]` | 12 ≥ 15 no | add | `[1,12]`, `[15,18]` |
 
 Row 2 is the whole trap: a pair can sit fully inside the last one.
 
@@ -397,31 +417,44 @@ There is no key to look up here.
 Overlap is about order on the number line, so the tool is sort, not a map.
 
 **Updating the last pair.**
-`last` is the same array object that sits in the list.
-`last[1] = Math.max(last[1], pair[1])` is enough; no remove and re-add.
+His code builds a `newPair`, removes the last pair, and adds `newPair` back.
+That works, but `tmpPair` is the same array object that sits in the list.
+`tmpPair[1] = Math.max(tmpPair[1], pair[1])` is enough; no new array, no remove and re-add.
+His `newPair[1]=newPair[1] = Math.max(...)` assigns twice; one `=` is enough.
 
 ### Memorize this
 
 1. Sort by start with `Integer.compare`.
 2. Walk once; compare each pair only with the last kept pair.
-3. Overlap when next start ≤ last end.
-4. On overlap, stretch: last end = max of the two ends.
+3. Overlap when last end ≥ next start.
+4. On overlap, replace the last pair with `[last start, max of the two ends]`.
 5. Otherwise add the pair as a new group.
 6. O(n log n) time, O(n) space.
 
 ```java
 public int[][] merge(int[][] intervals) {
     Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
-    List<int[]> res = new ArrayList<>();
-    for (int[] cur : intervals) {
-        if (res.isEmpty() || res.get(res.size() - 1)[1] < cur[0]) {
-            res.add(cur);
-        } else {
-            int[] last = res.get(res.size() - 1);
-            last[1] = Math.max(last[1], cur[1]);
+    List<int[]> list = new ArrayList<>();
+    for(int i=0;i<intervals.length;i++){
+        int[] pair=intervals[i];
+
+        if(list.isEmpty()) list.add(pair);
+        else{
+            int[] tmpPair=list.get(list.size()-1);
+            if(tmpPair[1]>=pair[0]) {
+                int[] newPair= new int[2];
+                newPair[0]=tmpPair[0];
+                newPair[1]=newPair[1] = Math.max(tmpPair[1], pair[1]);
+                list.remove(list.size()-1);
+                list.add(newPair);
+            }
+            else{
+                list.add(pair);
+            }
         }
     }
-    return res.toArray(new int[0][]);
+
+    return list.toArray(new int[list.size()][]);
 }
 ```
 
@@ -450,30 +483,34 @@ Write each run of consecutive numbers as `"a->b"`, or `"a"` if the run is one nu
 Pattern: one walk with a run start (intervals family: you are building `[start, end]` ranges).
 A run keeps going while the next number is exactly current + 1.
 A run ends in two cases: the next number jumps, **or there is no next number**.
-You only keep the start of the current run; the end is whatever `nums[i]` is when the run closes.
+His version keeps the open run in a `Stack`: `firstElement()` is the run's start and `lastElement()` its end.
+The loop only looks at pairs `nums[i]`, `nums[i+1]`, so the last number is handled once after the loop.
 Time O(n), because each index is visited once.
-Extra space O(1) besides the output list, because only `start` is kept.
+Extra space O(n) besides the output list, because one long run puts every number in the stack.
+
+Keeping only an `int start` instead of the stack makes the extra space O(1).
 
 ### How to solve it
 
-1. Walk `i` from 0 to `n - 1` (the whole array, including the last index).
-2. When a run starts, remember `start = nums[i]`.
-3. The run closes at `i` if `i == n - 1` or `nums[i + 1] != nums[i] + 1`.
-4. On close, write `start` alone if `start == nums[i]`, else `start + "->" + nums[i]`.
-5. The next index starts a new run.
+1. Guards: length 0 returns an empty list; length 1 returns that one number.
+2. Walk `i` from 0 to `n - 2`, comparing `nums[i]` with `nums[i+1]`.
+3. No jump (`nums[i]+1 == nums[i+1]`): push `nums[i]` onto the stack.
+4. Jump and stack empty: `nums[i]` is a run of one; write it alone.
+5. Jump and stack not empty: push `nums[i]`, write `first->last`, and start a new empty stack.
+6. After the loop the last number is still open: if the stack is not empty, push it and write `first->last`; else write it alone.
 
 Trace on `[0,1,2,4,5,7]`:
 
-| i | nums[i] | next | run start | closes here? | output |
+| i | nums[i] | next | jump? | stack after | output |
 |---|---|---|---|---|---|
-| 0 | 0 | 1 | 0 | no | |
-| 1 | 1 | 2 | 0 | no | |
-| 2 | 2 | 4 | 0 | yes, jump | `"0->2"` |
-| 3 | 4 | 5 | 4 | no | |
-| 4 | 5 | 7 | 4 | yes, jump | `"4->5"` |
-| 5 | 7 | none | 7 | yes, end of array | `"7"` |
+| 0 | 0 | 1 | no, push | [0] | |
+| 1 | 1 | 2 | no, push | [0, 1] | |
+| 2 | 2 | 4 | yes, stack not empty: push, write, reset | [] | `"0->2"` |
+| 3 | 4 | 5 | no, push | [4] | |
+| 4 | 5 | 7 | yes, stack not empty: push, write, reset | [] | `"4->5"` |
+| after loop | 7 | none | stack empty | [] | `"7"` |
 
-The last row is the one his code never reached.
+The after-loop row is the one his first version never had.
 
 ### Holes to patch
 
@@ -500,26 +537,44 @@ With the close check including `i == n - 1`, length 1 and length 0 fall out of t
 
 ### Memorize this
 
-1. For each `i`, remember `start = nums[i]`.
-2. Move `i` forward while the next number is exactly `nums[i] + 1`.
-3. Now `nums[i]` is the run's end (a jump or the end of the array).
-4. Write `"start"` if start equals end, else `"start->end"`.
-5. O(n) time, O(1) extra.
+1. Guards for length 0 and 1.
+2. Loop `i` to `n - 2`; no jump → push `nums[i]`.
+3. Jump with an empty stack → write `nums[i]` alone.
+4. Jump with a run open → push `nums[i]`, write `first->last`, new stack.
+5. After the loop, close the last number: push and write the run, or write it alone.
+6. O(n) time, O(n) extra for the stack.
 
 ```java
 public List<String> summaryRanges(int[] nums) {
-    List<String> res = new ArrayList<>();
-    int n = nums.length;
-    for (int i = 0; i < n; i++) {
-        int start = nums[i];
-        while (i + 1 < n && nums[i + 1] == nums[i] + 1) i++;
-        res.add(start == nums[i] ? String.valueOf(start) : start + "->" + nums[i]);
+    if(nums.length==0) return new ArrayList<>();
+    if(nums.length==1) return new ArrayList<>(List.of(String.valueOf(nums[0])));
+    ArrayList<String> ret=new ArrayList<>();
+    Stack<Integer> tmpStack=new Stack<>();
+    for(int i=0;i<nums.length-1;i++){
+        if(nums[i]+1!=nums[i+1]&&tmpStack.isEmpty()) ret.add(String.valueOf(nums[i]));
+        if(nums[i]+1!=nums[i+1]&&!tmpStack.isEmpty()) {
+            tmpStack.push(nums[i]);
+            ret.add(tmpStack.firstElement()+"->"+tmpStack.lastElement());
+            tmpStack=new Stack<>();
+        }
+        if (nums[i]+1==nums[i+1]){
+            tmpStack.push(nums[i]);
+        }
     }
-    return res;
+
+    if(!tmpStack.isEmpty()){
+        tmpStack.push(nums[nums.length-1]);
+        ret.add(tmpStack.firstElement()+"->"+tmpStack.lastElement());
+    }
+    else{
+        ret.add(String.valueOf(nums[nums.length-1]));
+    }
+
+    return ret;
 }
 ```
 
-Say in the interview: I walk once, remember where the current run started, extend it while the next number is one bigger, and close it on a jump or at the end of the array.
+Say in the interview: I walk once and keep the open run, extend it while the next number is one bigger, and close it on a jump or at the end of the array.
 
 ### How it went
 
@@ -553,7 +608,7 @@ Extra space O(1): only `low`, `high`, `mid`.
 
 ### How to solve it
 
-1. `low = 0`, `high = n - 1`, loop while `low <= high`.
+1. Null or empty: return -1; then `low = 0`, `high = n - 1`, loop while `low <= high`.
 2. `mid = low + (high - low) / 2`; if `nums[mid] == target`, return `mid`.
 3. If `nums[low] <= nums[mid]`, the left half is sorted.
    If target is in `[nums[low], nums[mid])`, go left (`high = mid - 1`), else go right (`low = mid + 1`).
@@ -600,18 +655,19 @@ With `<` instead, `[3,1]` target 1 checks the wrong half.
 
 ```java
 public int search(int[] nums, int target) {
-    int low = 0, high = nums.length - 1;
-    while (low <= high) {
+    if (nums==null||nums.length==0) return -1;
+
+    int low=0,high=nums.length-1;
+    while(low<=high){
         int mid = low + (high - low) / 2;
-        if (nums[mid] == target) return mid;
+        if(nums[mid]==target) return mid;
         if (nums[low] <= nums[mid]) {
             if (target >= nums[low] && target < nums[mid]) high = mid - 1;
             else low = mid + 1;
         } else {
             if (target > nums[mid] && target <= nums[high]) low = mid + 1;
             else high = mid - 1;
-        }
-    }
+        }}
     return -1;
 }
 ```
@@ -650,7 +706,7 @@ Extra space O(1).
 
 ### How to solve it
 
-1. `low = 0`, `high = n - 1`.
+1. Empty: return 0; then `low = 0`, `high = n - 1`.
 2. Loop while `low < high` (stop when they meet, not after).
 3. `mid = low + (high - low) / 2`.
 4. `nums[mid] > nums[high]`: `low = mid + 1`.
@@ -703,13 +759,20 @@ On an array that is not rotated, `nums[mid] > nums[low]` is always true and send
 
 ```java
 public int findMin(int[] nums) {
-    int low = 0, high = nums.length - 1;
-    while (low < high) {
-        int mid = low + (high - low) / 2;
-        if (nums[mid] > nums[high]) low = mid + 1;
-        else high = mid;
+    if (nums.length==0) return 0;
+    int low=0;
+    int high=nums.length-1;
+    while (low<high){
+        int mid =low+(high-low) /2 ;
+        if(nums[mid]>nums[high]) {
+            low=mid+1;
+        }
+        else {
+            high=mid;
+        }
     }
-    return nums[low];
+
+    return  nums[low];
 }
 ```
 
@@ -721,6 +784,101 @@ Named binary search; time and space same as #33.
 Before coding, the `mid` formula and index vs value had to be cleared up with a single-array table.
 Coded it himself from the six Memorize lines; all 7 green in about 8 minutes (on-time).
 Short step lists worked better than paragraphs today.
+
+---
+
+## LC 74 Search a 2D Matrix — green, no clock record
+
+https://leetcode.com/problems/search-a-2d-matrix/
+
+### The problem
+
+You get an `m × n` matrix.
+Each row is sorted, and each row starts bigger than the row above ends.
+Return `true` if `target` is in the matrix, in O(log(m × n)).
+
+```
+ 1  3  5  7
+10 11 16 20
+23 30 34 60
+target 3 -> true, target 13 -> false
+```
+
+### The idea
+
+Pattern: binary search over the matrix as one flat sorted array.
+Read row by row, the matrix is one sorted list of `m × n` cells.
+Flat index `i` lives at row `i / cols`, column `i % cols`.
+Run normal binary search on `0 .. m × n - 1` and turn `mid` into a cell each round.
+Time O(log(m × n)): one halving search over all cells.
+Extra space O(1).
+
+### How to solve it
+
+1. If the matrix is empty, return `false`.
+2. `low = 0`, `high = rows × cols - 1`.
+3. While `low <= high`: `mid`, read `matrix[mid / cols][mid % cols]`.
+4. Equal → `true`.
+5. Smaller than target → `low = mid + 1`, else `high = mid - 1`.
+6. Loop ends → `false`.
+
+Trace on the example, target 3, `cols = 4`:
+
+| low | high | mid | cell | value | move |
+|---|---|---|---|---|---|
+| 0 | 11 | 5 | (1,1) | 11 | too big, high = 4 |
+| 0 | 4 | 2 | (0,2) | 5 | too big, high = 1 |
+| 0 | 1 | 0 | (0,0) | 1 | too small, low = 1 |
+| 1 | 1 | 1 | (0,1) | 3 | found |
+
+### Holes to patch
+
+**The extra check on `low` does nothing.**
+His condition also checks `matrix[low / cols][low % cols] < target`.
+`low <= mid` and the flat list is sorted, so when the `mid` value is below target, the `low` value is too.
+Rule: compare only the `mid` value, like plain binary search.
+
+**Row is `/ cols`, column is `% cols`.**
+Using `rows` instead of `cols` breaks on a non-square matrix: `3 × 4`, flat index 5 must be `(1,1)`, not `(1,2)`.
+
+### Memorize this
+
+1. Empty → `false`.
+2. `low = 0`, `high = rows × cols - 1`, `cols = matrix[0].length`.
+3. While `low <= high`: `mid`, value at `[mid / cols][mid % cols]`.
+4. Equal → `true`.
+5. Below target → `low = mid + 1`, else `high = mid - 1`.
+6. Return `false`.
+
+```java
+public boolean searchMatrix(int[][] matrix, int target) {
+    if(matrix.length==0) return false;
+
+    int low=0;
+    int high=(matrix.length*matrix[0].length )-1;
+    int cols = matrix[0].length;
+    while(low<=high){
+        int   mid=low+(high-low)/2;
+        int tmpVal=(matrix[mid / cols][mid % cols]);
+        if(tmpVal==target) return true;
+        if((matrix[low / cols][low % cols])<target&&tmpVal<target){
+            low=mid+1;
+        }
+        else {
+            high=mid-1;
+        }
+
+    }
+    return false;
+}
+```
+
+Say in the interview: the rows chain into one sorted list, so I binary search flat indexes 0 to m·n−1 and map each mid to row mid / cols and column mid % cols, O(log(m·n)) time and O(1) space.
+
+### How it went
+
+Week 7 Day 4 was cut short for personal reasons, so there is no gate or clock record.
+His code is on disk and all 9 tests are green.
 
 ---
 
@@ -758,27 +916,28 @@ Shooting there pops it and as many later balloons as possible.
 Every balloon that starts at or before that end is popped by the same arrow.
 The first balloon that starts after it needs a new arrow, fired at its own end.
 What you keep while scanning: the position of the last arrow.
+His version keeps a list `ret` of the balloons that got a new arrow; the last one's end (`tmp[1]`) is where the last arrow is.
 Time O(n log n) for the sort; the walk is O(n).
-Extra space O(n): Java sorts an `int[][]` with TimSort, which can use up to n extra slots.
+Extra space O(n): the `ret` list can hold every balloon, and Java's TimSort on an `int[][]` can use up to n extra slots.
 
 ### How to solve it
 
-1. Empty input: return 0.
+1. Guards: empty returns 0; one balloon returns 1.
 2. Sort by end: `Integer.compare(a[1], b[1])`.
-3. First arrow at the first balloon's end, count 1.
-4. Walk the rest.
-5. `start <= arrow`: already popped, do nothing.
-6. Else: new arrow at this balloon's end, count + 1.
-7. Return the count.
+3. Walk every balloon `x`; if `ret` is empty, add `x` (first arrow at its end).
+4. Else look at the last arrow balloon, `tmp = ret.get(ret.size()-1)`.
+5. `x[0] <= tmp[1]`: already popped, do nothing.
+6. Else: new arrow at this balloon's end, `ret.add(x)`.
+7. Return `ret.size()`.
 
 Trace on the example, sorted by end: `[1,6] [2,8] [7,12] [10,16]`.
 
-| Balloon | start <= arrow? | arrow | count |
-|---|---|---|---|
-| `[1,6]` | first | 6 | 1 |
-| `[2,8]` | 2 <= 6, popped | 6 | 1 |
-| `[7,12]` | 7 > 6, new arrow | 12 | 2 |
-| `[10,16]` | 10 <= 12, popped | 12 | 2 |
+| x | tmp | x[0] <= tmp[1]? | ret | ret.size() |
+|---|---|---|---|---|
+| `[1,6]` | — | ret empty, add | `[1,6]` | 1 |
+| `[2,8]` | `[1,6]` | 2 <= 6, popped | `[1,6]` | 1 |
+| `[7,12]` | `[1,6]` | 7 > 6, new arrow | `[1,6] [7,12]` | 2 |
+| `[10,16]` | `[7,12]` | 10 <= 12, popped | `[1,6] [7,12]` | 2 |
 
 ### Holes to patch
 
@@ -807,6 +966,7 @@ His list grew in both branches: popped meant remove-then-add, not popped meant a
 So `ret.size()` was close to the number of balloons, not arrows.
 Rule: the list (or a counter) means "arrows fired."
 A popped balloon changes nothing.
+A counter plus an `int arrow` does the same job as the list with no extra space besides the sort.
 
 **Mixed up merge (#56) and arrows (#452).**
 #56 merges overlapping intervals and extends the end.
@@ -819,26 +979,37 @@ Rule: always `Integer.compare`.
 
 ### Memorize this
 
-1. Empty: return 0.
+1. Empty: return 0; one balloon: return 1.
 2. Sort by end with `Integer.compare(a[1], b[1])`.
-3. `arrow = points[0][1]`, `count = 1`.
-4. For each next balloon: `start <= arrow` means popped, skip.
-5. Else `count++`, `arrow = end` of this balloon.
-6. Return `count`.
-7. O(n log n) time, O(n) space for the sort.
+3. First balloon goes in `ret` (first arrow at its end).
+4. For each next balloon: `x[0] <= tmp[1]` (last arrow balloon's end) means popped, do nothing.
+5. Else add it to `ret` (new arrow at its end).
+6. Return `ret.size()`.
+7. O(n log n) time, O(n) space for the list and the sort.
 
 ```java
 public int findMinArrowShots(int[][] points) {
-    if (points.length == 0) return 0;
+    if(points.length==0) return 0;
+    if(points.length==1) return 1;
+
+    ArrayList<int[]> ret=new ArrayList<>();
     Arrays.sort(points, (a, b) -> Integer.compare(a[1], b[1]));
-    int arrows = 1;
-    int arrow = points[0][1];
-    for (int i = 1; i < points.length; i++) {
-        if (points[i][0] <= arrow) continue;
-        arrows++;
-        arrow = points[i][1];
+    for(int[] x:points){
+        System.out.println("X is "+x[0]+"---"+x[1]);
+        if(ret.isEmpty()) ret.add(x);
+
+        else{
+            int[] tmp=ret.get(ret.size()-1);
+            System.out.println("TMP IS "+tmp[0]+"---"+tmp[1]);
+            if(x[0]<=tmp[1]){
+                // tmp's arrow already pops x, keep nothing
+            }
+            else{
+                ret.add(x);
+            }
+        }
     }
-    return arrows;
+    return ret.size();
 }
 ```
 
@@ -885,9 +1056,9 @@ Extra space O(n) for the output list.
 2. For each range `x`:
 3. `x[1] < new[0]`: add `x`.
 4. `x[0] > new[1]`: if not placed, add `new` and mark placed; then add `x`.
-5. Else (overlap): `new = [min(x[0], new[0]), max(x[1], new[1])]`.
+5. Else (overlap): build `tmp = [min(x[0], new[0]), max(x[1], new[1])]` and set `newInterval = tmp`.
 6. After the loop: if not placed, add `new`.
-7. Copy the list into `int[][]`.
+7. Copy the list into `int[][] retarr` with a loop.
 
 Trace on `[[1,2],[3,5],[6,7],[8,10],[12,16]]` with new `[4,8]`:
 
@@ -936,26 +1107,41 @@ Rule: a `placed` flag; add before the first "after" range, or after the loop.
 1. Result list, `placed = false`.
 2. `x.end < new.start`: copy `x`.
 3. `x.start > new.end`: place `new` once, then copy `x`.
-4. Else: `new = [min starts, max ends]`.
+4. Else: `tmp = [min starts, max ends]`, `newInterval = tmp`.
 5. After the loop, place `new` if not placed.
-6. O(n) time, O(n) output.
+6. Copy the list into an `int[][]`.
+7. O(n) time, O(n) output.
 
 ```java
 public int[][] insert(int[][] intervals, int[] newInterval) {
-    List<int[]> ret = new ArrayList<>();
-    boolean placed = false;
-    for (int[] x : intervals) {
-        if (x[1] < newInterval[0]) {
+    ArrayList <int[]> ret=new ArrayList<>();
+    boolean placed=false;
+
+    for(int[] x:intervals){
+        if(x[1]<newInterval[0]){
             ret.add(x);
-        } else if (x[0] > newInterval[1]) {
-            if (!placed) { ret.add(newInterval); placed = true; }
+        }
+        else if(x[0]>newInterval[1]){
+            if(!placed){
+                ret.add(newInterval);
+                placed=true;
+            }
             ret.add(x);
-        } else {
-            newInterval = new int[]{Math.min(x[0], newInterval[0]), Math.max(x[1], newInterval[1])};
+        }
+        else{
+            int [] tmp=new int[2];
+            tmp[0]=Math.min(x[0],newInterval[0]);
+            tmp[1]=Math.max(x[1],newInterval[1]);
+            newInterval=tmp;
         }
     }
-    if (!placed) ret.add(newInterval);
-    return ret.toArray(new int[0][]);
+    if(!placed) ret.add(newInterval);
+
+    int[][] retarr=new int[ret.size()][];
+    for(int i=0;i<ret.size();i++){
+        retarr[i]=ret.get(i);
+    }
+    return retarr;
 }
 ```
 

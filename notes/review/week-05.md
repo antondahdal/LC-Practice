@@ -7,14 +7,14 @@ Days 1–3 have no clock, so those results say "passed (no timer)" when he coded
 
 | # | Problem | Pattern | Time / space | Result |
 |---|---|---|---|---|
-| 19 | Remove Nth Node From End of List | Two pointers with a gap of `n` + dummy | O(n) / O(1) | passed (no timer) |
-| 206 | Reverse Linked List | Iterative reversal (`prev`, `curr`, saved `next`) | O(n) / O(1) | passed (no timer) |
+| 19 | Remove Nth Node From End of List | Two pointers with a gap of `n` + head-victim check | O(n) / O(1) | passed (no timer) |
+| 206 | Reverse Linked List | Iterative reversal (`first`, `sec`, saved `tmp`) | O(n) / O(1) | passed (no timer) |
 | 143 | Reorder List | Fast/slow middle + reverse back half + weave | O(n) / O(1) | coach-fixed |
 | 141 | Linked List Cycle | HashSet of nodes, then fast/slow (Floyd) | O(n) / O(n) set, O(1) Floyd | passed (no timer) |
 | 2 | Add Two Numbers | Two walkers + carry + dummy | O(max(m,n)) / O(1) extra | coach-fixed |
-| 21 | Merge Two Sorted Lists | Two walkers + dummy, hook the smaller | O(m+n) / O(1) | passed (no timer) |
+| 21 | Merge Two Sorted Lists | Two walkers + dummy, copy the smaller | O(m+n) / O(m+n) copies (O(1) if you hook live nodes) | passed (no timer) |
 | 92 | Reverse Linked List II | Dummy + walk to `before` + reverse k nodes | O(n) / O(1) | overtime, coach-fixed |
-| 160 | Intersection of Two Linked Lists | HashSet of nodes (cousin: switch-heads walkers) | O(m+n) / O(m) set, O(1) walkers | on-time |
+| 160 | Intersection of Two Linked Lists | HashSet of nodes, one loop over both (cousin: switch-heads walkers) | O(m+n) / O(m+n) set, O(1) walkers | on-time, still buggy |
 | 82 | Remove Duplicates from Sorted List II | Dummy + skip whole equal runs | O(n) / O(1) | overtime |
 | 234 | Palindrome Linked List | Fast/slow middle + reverse back half + compare | O(n) / O(1) | on-time |
 
@@ -38,36 +38,38 @@ Edge example: `1 → 2`, `n = 2` removes the head and gives `2`.
 Pattern: two pointers with a fixed gap.
 
 You cannot count from the tail of a singly list, but you can fake it.
-Walk `front` ahead first so there is a gap between `front` and `back`.
+Walk `first` ahead `n` steps so there is a gap of `n` links between `first` and `back`.
 Then move both one step at a time.
-When `front` falls off the end, `back` sits exactly on the node before the victim.
+When `first` sits on the last node, `back` sits exactly on the node before the victim.
 
-A dummy node in front of the head means the head victim is not a special case.
-`back` can always sit on "the node before", even when the victim is the head.
+If `first` is already `null` after the `n` steps, the list has exactly `n` nodes.
+Then the victim is the head, and there is no node before it, so return `head.next`.
 
-Time is O(n) because `front` walks the list once and `back` walks part of it.
-Extra space is O(1) because you only keep two pointers and a dummy.
+Time is O(n) because `first` walks the list once and `back` walks part of it.
+Extra space is O(1) because you only keep two pointers.
 
 ### How to solve it
 
-1. Put a `dummy` in front of `head`.
-2. Start `front` and `back` on `dummy`.
-3. Move `front` forward `n + 1` times, so the gap is `n + 1` links.
-4. Move both until `front` is `null`.
+1. Start `first` and `back` on `head`.
+2. Move `first` forward `n` times.
+3. If `first` is `null`, the head is the victim, so return `head.next`.
+4. Move both while `first.next != null`, so `first` stops on the last node.
 5. `back.next` is the victim, so set `back.next = back.next.next`.
-6. Return `dummy.next`.
+6. Return `head`.
 
-Trace on `1 → 2 → 3`, `n = 3` (the head is the victim):
+Trace on `1 → 2 → 3 → 4 → 5`, `n = 2`:
 
-| step | front | back | list so far |
+| step | first | back | list so far |
 |---|---|---|---|
-| start | dummy | dummy | dummy → 1 → 2 → 3 |
-| front 1 | 1 | dummy | same |
-| front 2 | 2 | dummy | same |
-| front 3 | 3 | dummy | same |
-| front 4 | null | dummy | same, loop does not run |
-| skip | null | dummy | dummy → 2 → 3 |
-| return | | | 2 → 3 |
+| start | 1 | 1 | 1 → 2 → 3 → 4 → 5 |
+| first 1 | 2 | 1 | same |
+| first 2 | 3 | 1 | same, `first` is not null |
+| both 1 | 4 | 2 | same |
+| both 2 | 5 | 3 | same, `first.next` is null, stop |
+| skip | 5 | 3 | 1 → 2 → 3 → 5 |
+| return | | | 1 → 2 → 3 → 5 |
+
+On `1 → 2 → 3`, `n = 3`, `first` walks to `null`, so step 3 returns `2 → 3`.
 
 ### Holes to patch
 
@@ -80,44 +82,57 @@ Rule: two pointers with a fixed gap of `n`, not a window.
 **Head victim treated like a mid-list skip**
 
 Without a dummy, `back` starts on the head, and the skip removes the node after `back`.
-On `1 → 2`, `n = 2`, `front` walks to `null`, and `back.next = back.next.next` removes `2` instead of `1`.
+On `1 → 2`, `n = 2`, `first` walks to `null`, and `back.next = back.next.next` removes `2` instead of `1`.
 On `1`, `n = 1`, `back.next` is `null`, so `back.next.next` throws a `NullPointerException`.
-Rule: if `front` is already `null` after walking `n` steps, the victim is the head, so return `head.next`, or put a dummy in front so there is always a node before the victim.
+Rule: if `first` is already `null` after walking `n` steps, the victim is the head, so return `head.next`.
 
 ```java
-if (front == null) return head.next;
-```
-
-### Memorize this
-
-1. Dummy in front of head.
-2. `front` and `back` on dummy.
-3. `front` walks `n + 1`.
-4. Both walk until `front == null`.
-5. `back.next = back.next.next`.
-6. Return `dummy.next`.
-
-```java
-public ListNode removeNthFromEnd(ListNode head, int n) {
-    ListNode dummy = new ListNode(0, head);
-    ListNode front = dummy, back = dummy;
-    for (int i = 0; i <= n; i++) front = front.next;
-    while (front != null) {
-        front = front.next;
-        back = back.next;
-    }
-    back.next = back.next.next;
-    return dummy.next;
+if(first==null){
+    return back.next;
 }
 ```
 
-Say in the interview: I keep two pointers `n + 1` links apart starting from a dummy, so when the front one falls off, the back one is right before the node to delete, in one pass and O(1) space.
+Alternative without the special case: start both on a dummy in front of the head, walk `n + 1`, and return `dummy.next`.
+
+### Memorize this
+
+1. `first` and `back` on head.
+2. `first` walks `n`.
+3. `first == null`: the head is the victim, return `head.next`.
+4. Both walk while `first.next != null`.
+5. `back.next = back.next.next`.
+6. Return `head`.
+
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+
+    ListNode first=head;
+
+    ListNode back=head;
+    for(int i=0;i<n;i++){
+        first=first.next;
+    }
+    if(first==null){
+
+        return back.next;
+    }
+    while(first!=null && first.next!=null){
+        first=first.next;
+        back=back.next;
+    }
+    back.next=back.next.next;
+    return head;
+}
+```
+
+Say in the interview: I walk one pointer `n` steps ahead, return `head.next` if it already fell off, and otherwise move both until the front one is on the last node, so the back one is right before the node to delete, in one pass and O(1) space.
 
 ### How it went
 
 He coded it and it passed, before the timer existed.
 The gate started as "sliding window" and he fixed the name to two pointers.
 His version handles the head with `return head.next` instead of a dummy.
+The `first!=null` in his `while` is always true at that point, so it is harmless but not needed.
 
 ---
 
@@ -134,27 +149,28 @@ An empty list returns `null`.
 
 ### The idea
 
-Pattern: iterative reversal with `prev`, `curr`, and a saved `next`.
+Pattern: iterative reversal with `first` (the node behind), `sec` (the current node), and a saved `tmp`.
 
 Walk the list once.
 At each node, point its `next` back at the node behind it.
-You must save the old `next` first, or you lose the rest of the list.
-When `curr` falls off, `prev` is the old tail, which is the new head.
+You must save the old `next` in `tmp` first, or you lose the rest of the list.
+When `sec` falls off, `first` is the old tail, which is the new head.
 
 Time is O(n) because each node is flipped once.
 Extra space is O(1) because you keep three pointers.
 
 ### How to solve it
 
-1. `prev = null`, `curr = head`.
-2. While `curr != null`: save `next = curr.next`.
-3. Point `curr.next = prev`.
-4. Move `prev = curr`, then `curr = next`.
-5. Return `prev`.
+1. Empty or one node: return `head`.
+2. `first = null`, `sec = head`.
+3. While `sec != null`: save `tmp = sec.next`.
+4. Point `sec.next = first`.
+5. Move `first = sec`, then `sec = tmp`.
+6. Return `first`.
 
 Trace on `1 → 2 → 3`:
 
-| step | prev | curr | next | links so far |
+| step | first | sec | tmp | links so far |
 |---|---|---|---|---|
 | start | null | 1 | | 1 → 2 → 3 |
 | 1 | 1 | 2 | 2 | 1 → null |
@@ -170,36 +186,40 @@ Swapping each pair (`first.next = sec.next; sec.next = first`) is LC 24 Swap Nod
 On `1 → 2 → 3 → 4` it gives `2 → 1 → 4 → 3`, not `4 → 3 → 2 → 1`.
 Rule: reverse points every node back at the one behind it, one node per step.
 
-**Loop condition that reads `curr.next`**
+**Loop condition that reads `sec.next`**
 
-`while (curr != null || curr.next != null)` still evaluates `curr.next` when `curr` is `null`.
-On any list, the last step makes `curr` null and the check throws a `NullPointerException`.
-Rule: the loop is exactly `while (curr != null)`.
+`while (sec != null || sec.next != null)` still evaluates `sec.next` when `sec` is `null`.
+On any list, the last step makes `sec` null and the check throws a `NullPointerException`.
+Rule: the loop is exactly `while (sec != null)`.
 
 **Both pointers start on the head**
 
-If `prev = head` and `curr = head`, the first step sets `head.next = head`.
+If `first = head` and `sec = head`, the first step sets `head.next = head`.
 On `1 → 2`, node `1` now points at itself, which is a cycle.
-Rule: `prev` starts at `null`, because the old head becomes the new tail.
+Rule: `first` starts at `null`, because the old head becomes the new tail.
 
 ### Memorize this
 
-1. `prev = null`, `curr = head`.
-2. Save `next`.
-3. `curr.next = prev`.
-4. `prev = curr`, `curr = next`.
-5. Loop `while (curr != null)`, return `prev`.
+1. Empty or one node: return `head`.
+2. `first = null`, `sec = head`.
+3. Save `tmp = sec.next`.
+4. `sec.next = first`.
+5. `first = sec`, `sec = tmp`.
+6. Loop `while (sec != null)`, return `first`.
 
 ```java
 public ListNode reverseList(ListNode head) {
-    ListNode prev = null, curr = head;
-    while (curr != null) {
-        ListNode next = curr.next;
-        curr.next = prev;
-        prev = curr;
-        curr = next;
+    if(head==null||head.next==null) return head;
+
+    ListNode first=null;
+    ListNode sec=head;
+    while(sec!=null ){
+        ListNode tmp=sec.next;
+        sec.next=first;
+        first=sec;
+        sec=tmp;
     }
-    return prev;
+    return first;
 }
 ```
 
@@ -209,6 +229,7 @@ Say in the interview: I walk once, save the next node, point the current node ba
 
 He coded it and it passed, before the timer existed.
 The gate first described a neighbor swap, which is LC 24.
+His early `return head` is optional, because the loop already handles 0 and 1 nodes.
 This loop is the building block for LC 143, LC 92, and LC 234 later in the week.
 
 ---
@@ -240,9 +261,9 @@ Extra space is O(1) because you only rewire existing nodes.
 
 1. If the list has 0 or 1 nodes, return.
 2. `slow` and `fast` start on `head`; move while `fast.next != null && fast.next.next != null`.
-3. `slow` is the end of the front half; cut with `second = slow.next`, `slow.next = null`.
-4. Reverse `second` with the LC 206 loop.
-5. Weave: save both `next`s, hook `front.next = back`, `back.next = frontNext`, advance both.
+3. `slow` is the end of the front half; cut with `sec = slow.next`, `slow.next = null`.
+4. Reverse `sec` with the LC 206 loop (`first = null`, save `tmp`); `first` is the reversed back head.
+5. Weave with `front = head`, `back = first`: save `frontNext` and `backNext`, hook `front.next = back`, `back.next = frontNext`, advance both.
 6. Stop when the back half runs out.
 
 Trace on `1 → 2 → 3 → 4 → 5`.
@@ -277,7 +298,7 @@ On `1 → 2 → 3 → 4`, the weave ends with `3.next = 3`, a self-loop.
 Rule: cut at the middle before reversing.
 
 ```java
-ListNode second = slow.next;
+ListNode sec = slow.next;
 slow.next = null;
 ```
 
@@ -285,29 +306,41 @@ slow.next = null;
 
 1. Empty or one node: return.
 2. Middle: `while (fast.next != null && fast.next.next != null)`.
-3. Cut: `second = slow.next`, `slow.next = null`.
-4. Reverse `second` (LC 206 loop).
-5. Weave one front, one back, until the back is `null`.
+3. Cut: `sec = slow.next`, `slow.next = null`.
+4. Reverse `sec` (LC 206 loop); `first` is the back head.
+5. Weave `front = head`, `back = first`, one front, one back, until the back is `null`.
 
 ```java
 public void reorderList(ListNode head) {
-    if (head == null || head.next == null) return;
-    ListNode slow = head, fast = head;
+    if (head == null || head.next == null) {
+        return;
+    }
+
+    // 1) Find the middle. slow stops at the end of the front half.
+    ListNode slow = head;
+    ListNode fast = head;
     while (fast.next != null && fast.next.next != null) {
         slow = slow.next;
         fast = fast.next.next;
     }
-    ListNode curr = slow.next, prev = null;
+
+    // 2) Cut, then reverse the back half. Same loop as #206.
+    ListNode sec = slow.next;
     slow.next = null;
-    while (curr != null) {
-        ListNode next = curr.next;
-        curr.next = prev;
-        prev = curr;
-        curr = next;
+    ListNode first = null;
+    while (sec != null) {
+        ListNode tmp = sec.next;
+        sec.next = first;
+        first = sec;
+        sec = tmp;
     }
-    ListNode front = head, back = prev;
+
+    // 3) Hook: one from the front half, one from the reversed back half.
+    ListNode front = head;
+    ListNode back = first;
     while (back != null) {
-        ListNode frontNext = front.next, backNext = back.next;
+        ListNode frontNext = front.next;
+        ListNode backNext = back.next;
         front.next = back;
         back.next = frontNext;
         front = frontNext;
@@ -354,19 +387,21 @@ Extra space is O(n) for the set, because it can hold every node, and O(1) for fa
 
 ### How to solve it
 
-1. `slow = head`, `fast = head`.
-2. While `fast != null && fast.next != null`: move `slow` one, `fast` two.
-3. If `slow == fast`, return `true`.
-4. If the loop ends, return `false`.
+1. Empty or one node: return `false`.
+2. `slow = head`, `fast = head.next.next`, so `fast` already has a two-step head start.
+3. While `fast != null`: if `slow == fast`, return `true`.
+4. Move `slow` one step.
+5. If `fast.next` or `fast.next.next` is `null`, the list ends, so return `false`.
+6. Move `fast` two steps.
+7. If the loop ends, return `false`.
 
 Trace on `1 → 2 → 3 → 4` with `4.next = 2`:
 
 | step | slow | fast | same? |
 |---|---|---|---|
-| start | 1 | 1 | skip the check |
-| 1 | 2 | 3 | no |
-| 2 | 3 | 2 | no |
-| 3 | 4 | 4 | yes, return `true` |
+| start | 1 | 3 | no |
+| 1 | 2 | 2 (3 → 4 → 2) | checked next turn |
+| 2 | 2 | 2 | yes, return `true` |
 
 ### Holes to patch
 
@@ -374,11 +409,13 @@ Trace on `1 → 2 → 3 → 4` with `4.next = 2`:
 
 His first fast/slow version jumped `fast.next.next` without guarding `fast.next`.
 On `1 → 2 → 3`, `fast` lands on `3`, `fast.next` is `null`, and `fast.next.next` throws a `NullPointerException`.
-Rule: check both `fast != null` and `fast.next != null` before the double jump.
+Rule: check `fast.next` before the double jump.
 
 ```java
-while (fast != null && fast.next != null)
+if(fast.next == null|| fast.next.next==null )return false;
 ```
+
+The common form puts the guard in the loop: `while (fast != null && fast.next != null)`, with both starting on `head`.
 
 **Classic trap: storing values instead of nodes**
 
@@ -388,19 +425,23 @@ Rule: put the `ListNode` in the set, not `node.val`.
 
 ### Memorize this
 
-1. `slow` and `fast` on head.
-2. Loop while `fast != null && fast.next != null`.
-3. `slow` one step, `fast` two steps.
-4. Same node: `true`.
-5. Loop ends: `false`.
+1. Empty or one node: `false`.
+2. `slow = head`, `fast = head.next.next`.
+3. Loop while `fast != null`; same node: `true`.
+4. `slow` one step.
+5. `fast.next` or `fast.next.next` is `null`: `false`.
+6. `fast` two steps.
 
 ```java
 public boolean hasCycle(ListNode head) {
-    ListNode slow = head, fast = head;
-    while (fast != null && fast.next != null) {
-        slow = slow.next;
-        fast = fast.next.next;
-        if (slow == fast) return true;
+    if(head==null||head.next==null) return false;
+    ListNode slow=head;
+    ListNode fast=head.next.next;
+    while(fast!=null){
+        if(slow==fast) return true;
+        slow=slow.next;
+        if(fast.next == null|| fast.next.next==null )return false;
+        fast=fast.next.next;
     }
     return false;
 }
@@ -412,7 +453,7 @@ Say in the interview: A HashSet of nodes works in O(n) space, but with a slow an
 
 He coded the node set first, then the fast/slow cousin, before the timer existed.
 The cousin first threw a `NullPointerException` on `1 → 2 → 3`, and the guard fixed it.
-His repo version starts `fast` at `head.next.next`, which also works.
+His repo version keeps only the fast/slow cousin, with `fast` starting at `head.next.next` and the guard inside the loop.
 
 ---
 
@@ -491,16 +532,25 @@ Rule: loop while either list or the carry is alive.
 
 ```java
 public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
-    ListNode dummy = new ListNode(), tail = dummy;
+    ListNode dummy = new ListNode();
+    ListNode tail = dummy;
     int carry = 0;
+
     while (l1 != null || l2 != null || carry != 0) {
         int sum = carry;
-        if (l1 != null) { sum += l1.val; l1 = l1.next; }
-        if (l2 != null) { sum += l2.val; l2 = l2.next; }
+        if (l1 != null) {
+            sum += l1.val;
+            l1 = l1.next;
+        }
+        if (l2 != null) {
+            sum += l2.val;
+            l2 = l2.next;
+        }
         tail.next = new ListNode(sum % 10);
         tail = tail.next;
         carry = sum / 10;
     }
+
     return dummy.next;
 }
 ```
@@ -527,33 +577,36 @@ Example: `1 → 2 → 4` and `1 → 3 → 4` give `1 → 1 → 2 → 3 → 4 →
 
 ### The idea
 
-Pattern: two walkers plus a dummy node, hooking the smaller head each step.
+Pattern: two walkers plus a dummy node, copying the smaller head each step.
 
 Both lists are sorted, so the smallest remaining value is always one of the two heads.
-Hook that node onto the tail of the answer and advance that list.
-When one list runs out, the other one is already sorted, so hook the rest in one assignment.
+Copy that value into a new node at the tail of the answer and advance that list.
+When one list runs out, keep copying the other one, which is already sorted.
 
-Time is O(m + n) because every node is hooked once.
-Extra space is O(1) because you rewire the existing nodes instead of copying them.
+Time is O(m + n) because every node is copied once.
+Extra space is O(m + n) because each value goes into a new node.
+Hooking the live nodes instead of copying would make it O(1), see the holes.
 
 ### How to solve it
 
-1. `dummy`, `tail = dummy`.
-2. While both lists are non-null, hook the smaller head onto `tail.next` and advance that list.
-3. Move `tail = tail.next`.
-4. After the loop, `tail.next = list1 != null ? list1 : list2`.
-5. Return `dummy.next`.
+1. Both lists empty: return `null`.
+2. `finalListTmp` is the dummy, and `finalList` is the tail.
+3. Loop while `list1 != null || list2 != null`.
+4. If both are non-null, copy the smaller head (`list1.val < list2.val` takes `list1`, ties take `list2`) and advance that list.
+5. Then, if only `list2` is left, copy its head and advance it.
+6. Then, if only `list1` is left, copy its head and advance it.
+7. Return `finalListTmp.next`.
 
-Trace on `1 → 2 → 4` and `1 → 3 → 4` (equal values take two steps):
+Trace on `1 → 2 → 4` and `1 → 3 → 4` (one turn can copy twice when a list just ran out):
 
-| step | list1 head | list2 head | hook | answer so far |
+| turn | list1 head | list2 head | copied | answer so far |
 |---|---|---|---|---|
-| 1 | 1 | 1 | list1's 1 | 1 |
-| 2 | 2 | 1 | list2's 1 | 1 → 1 |
+| 1 | 1 | 1 | list2's 1 (tie) | 1 |
+| 2 | 1 | 3 | list1's 1 | 1 → 1 |
 | 3 | 2 | 3 | 2 | 1 → 1 → 2 |
 | 4 | 4 | 3 | 3 | 1 → 1 → 2 → 3 |
-| 5 | 4 | 4 | list1's 4 | 1 → 1 → 2 → 3 → 4 |
-| end | null | 4 | hook the rest | 1 → 1 → 2 → 3 → 4 → 4 |
+| 5 | 4 | 4 | list2's 4, then list2 is empty, so list1's 4 | 1 → 1 → 2 → 3 → 4 → 4 |
+| end | null | null | loop stops | 1 → 1 → 2 → 3 → 4 → 4 |
 
 ### Holes to patch
 
@@ -568,11 +621,6 @@ Rule: always hook the smaller head, one node per step.
 He built the answer with `new ListNode(list1.val)`, and his repo version still does.
 That allocates m + n new nodes, so the extra space is O(m + n), not O(1).
 Rule: hook the live node itself.
-
-```java
-tail.next = list1;
-list1 = list1.next;
-```
 
 **Leftover checks inside `while (both)`**
 
@@ -589,31 +637,52 @@ Rule: return `dummy.next`.
 
 ### Memorize this
 
-1. Dummy + tail.
-2. While both: hook the smaller live node, advance it.
-3. Move tail.
-4. After the loop: `tail.next = list1 != null ? list1 : list2`.
-5. Return `dummy.next`.
+1. Both empty: `null`.
+2. Dummy `finalListTmp`, tail `finalList`.
+3. Loop while either list is alive.
+4. Both alive: copy the smaller head, advance it.
+5. Only one alive: copy its head, advance it.
+6. Return `finalListTmp.next`.
 
 ```java
 public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
-    ListNode dummy = new ListNode(), tail = dummy;
-    while (list1 != null && list2 != null) {
-        if (list1.val <= list2.val) {
-            tail.next = list1;
-            list1 = list1.next;
-        } else {
-            tail.next = list2;
-            list2 = list2.next;
+    if(list1==null&&list2==null) return null;
+    ListNode finalListTmp=new ListNode();
+    ListNode finalList=finalListTmp;
+    while(list1!=null||list2!=null){
+
+
+        if(list1!=null&&list2!=null){
+            if(list1.val<list2.val){
+                finalList.next=new ListNode(list1.val);
+                finalList=finalList.next;
+            list1=list1.next;}
+            else {
+                finalList.next=new ListNode(list2.val);
+                finalList=finalList.next;
+                list2=list2.next;
+            }
+
         }
-        tail = tail.next;
+
+        if(list1==null&&list2!=null){
+            finalList.next=new ListNode(list2.val);
+            finalList=finalList.next;
+            list2=list2.next;
+        }
+        if(list2==null&&list1!=null){
+            finalList.next=new ListNode(list1.val);
+            finalList=finalList.next;
+            list1=list1.next;
+        }
+
+
     }
-    tail.next = (list1 != null) ? list1 : list2;
-    return dummy.next;
+    return finalListTmp.next;
 }
 ```
 
-Say in the interview: The smallest remaining value is always one of the two heads, so I hook the smaller one behind a dummy, then attach whatever list is left, in O(m + n) time and O(1) extra space by rewiring.
+Say in the interview: The smallest remaining value is always one of the two heads, so I copy the smaller one behind a dummy and keep copying whichever list is left, in O(m + n) time, and if they want O(1) extra space I hook the live nodes instead of copying.
 
 ### How it went
 
@@ -649,18 +718,19 @@ Extra space is O(1) because you only rewire pointers.
 
 ### How to solve it
 
-1. `dummy.next = head`, `before = dummy`.
-2. Move `before` forward `left - 1` times.
-3. `start = before.next`, `prev = null`, `curr = start`.
-4. Run the LC 206 loop exactly `right - left + 1` times.
-5. Now `prev` is the new slice head and `curr` is the first node after the slice.
-6. `before.next = prev`, `start.next = curr`.
-7. Return `dummy.next`.
+1. Empty or one node: return `head`.
+2. `dummy = new ListNode(0, head)`, `before = dummy`.
+3. Move `before` forward `left - 1` times.
+4. `start = before.next`, `first = null`, `sec = start`.
+5. Run the LC 206 loop (save `tmp`) exactly `right - left + 1` times.
+6. Now `first` is the new slice head and `sec` is the first node after the slice.
+7. `before.next = first`, `start.next = sec`.
+8. Return `dummy.next`.
 
 Trace on `1 → 2 → 3 → 4 → 5`, `left = 2`, `right = 4`.
-After step 2, `before` is `1` and `start` is `2`.
+After step 3, `before` is `1` and `start` is `2`.
 
-| step | prev | curr | next | slice links |
+| step | first | sec | tmp | slice links |
 |---|---|---|---|---|
 | start | null | 2 | | 2 → 3 → 4 |
 | 1 | 2 | 3 | 3 | 2 → null |
@@ -687,11 +757,11 @@ Rule: `dummy = new ListNode(0, head)`, and `before` starts on the dummy.
 
 He put the "behind" pointer on `2` and the current pointer on `3`, so `2` was treated as outside the slice.
 The step `3.next = 2` ran while `2.next` was still `3`, which makes a `2 ⇄ 3` cycle.
-Rule: `prev = null` and `curr = start`, same as LC 206.
+Rule: `first = null` and `sec = start`, same as LC 206.
 
 **Reversed the whole tail**
 
-`while (curr != null)` reverses to the end of the list, not to `right`.
+`while (sec != null)` reverses to the end of the list, not to `right`.
 On `1 → 2 → 3 → 4 → 5`, `left = 2`, `right = 3`, it also flips `4` and `5`.
 Rule: loop a fixed `right - left + 1` times.
 
@@ -708,26 +778,38 @@ Rule: O(n) time because you walk the list, and O(1) extra because you rewire in 
 
 ### Memorize this
 
-1. Dummy in front of head.
-2. `before` walks `left - 1`.
-3. `start = before.next`, `prev = null`, `curr = start`.
-4. LC 206 loop, `right - left + 1` times.
-5. `before.next = prev`, `start.next = curr`.
-6. Return `dummy.next`.
+1. Empty or one node: return `head`.
+2. Dummy in front of head, `before` on dummy.
+3. `before` walks `left - 1`.
+4. `start = before.next`, `first = null`, `sec = start`.
+5. LC 206 loop, `right - left + 1` times.
+6. `before.next = first`, `start.next = sec`.
+7. Return `dummy.next`.
 
 ```java
 public ListNode reverseBetween(ListNode head, int left, int right) {
-    ListNode dummy = new ListNode(0, head), before = dummy;
-    for (int i = 1; i < left; i++) before = before.next;
-    ListNode start = before.next, prev = null, curr = start;
-    for (int i = 0; i <= right - left; i++) {
-        ListNode next = curr.next;
-        curr.next = prev;
-        prev = curr;
-        curr = next;
+    if (head == null || head.next == null) {
+        return head;
     }
-    before.next = prev;
-    start.next = curr;
+
+    ListNode dummy = new ListNode(0, head);
+    ListNode before = dummy;
+    for (int i = 1; i < left; i++) {
+        before = before.next;
+    }
+
+    ListNode start = before.next;
+    ListNode first = null;
+    ListNode sec = start;
+    for (int i = 0; i < right - left + 1; i++) {
+        ListNode tmp = sec.next;
+        sec.next = first;
+        first = sec;
+        sec = tmp;
+    }
+
+    before.next = first;
+    start.next = sec;
     return dummy.next;
 }
 ```
@@ -756,41 +838,35 @@ Example: A is `4 → 1 → 8 → 4 → 5`, B is `5 → 6 → 1 → 8 → 4 → 5
 
 ### The idea
 
-Pattern: HashSet of nodes, or two walkers that switch heads.
+Pattern: HashSet of nodes.
 
-Set version: walk all of A into a set of nodes.
-Then walk B, and the first node already in the set is the join.
+The join is the first node that belongs to both lists.
+A set of `ListNode` remembers which nodes you already saw, by reference, not by value.
+His version walks A and B in the same loop, adds both current nodes each turn, and returns the first current node that is already in the set.
 
-Walker version: `a` walks A then B, and `b` walks B then A.
-Both travel m + n steps in total, so they line up at the join, or both reach `null` together if there is no join.
-
-Time is O(m + n) for both, because each list is walked a constant number of times.
-Extra space is O(m) for the set, because it holds all of A, and O(1) for the walkers.
+Time is O(m + n) because each list is walked once.
+Extra space is O(m + n) because the set can hold nodes from both lists.
 
 ### How to solve it
 
-Set version:
+His one-loop version:
 
-1. Walk A and add every node to a `HashSet<ListNode>`.
-2. Walk B; return the first node the set contains.
-3. Return `null` if B ends.
+1. Either list empty: return `null`.
+2. Loop while `headA != null || headB != null`.
+3. If the set contains `headA`, return it; if it contains `headB`, return it.
+4. Otherwise add both current nodes.
+5. Advance each list that is not `null` yet.
+6. Return `null` when both end.
 
-Walker version:
+Trace on A = `1 → 8`, B = `4 → 5 → 8` (node `8` is shared), where it works:
 
-1. `a = headA`, `b = headB`.
-2. While `a != b`: `a` steps, or jumps to `headB` when it is `null`; same for `b` with `headA`.
-3. Return `a`.
+| turn | headA | headB | found? | set after |
+|---|---|---|---|---|
+| 1 | 1 | 4 | no | 1, 4 |
+| 2 | 8 | 5 | no | 1, 4, 5, 8 |
+| 3 | null | 8 | `8` is in the set | return 8 |
 
-Walker trace on A = `1 → 8`, B = `4 → 5 → 8` (node `8` is shared):
-
-| step | a | b | same? |
-|---|---|---|---|
-| start | 1 | 4 | no |
-| 1 | 8 | 5 | no |
-| 2 | null | 8 | no |
-| 3 | 4 (switched to B) | null | no |
-| 4 | 5 | 1 (switched to A) | no |
-| 5 | 8 | 8 | yes, return 8 |
+The holes below show inputs where this shape breaks.
 
 ### Holes to patch
 
@@ -803,11 +879,17 @@ On A = `1 → 8`, B = `4 → 5 → 6 → 8` (node `8` shared), it returns `null`
 This bug is still in his repo version, and the current tests do not catch it.
 Rule: walk A into the set first, then walk B.
 
-```java
-for (ListNode a = headA; a != null; a = a.next) set.add(a);
-for (ListNode b = headB; b != null; b = b.next) if (set.contains(b)) return b;
-return null;
-```
+**Both walkers reach the join on the same turn**
+
+The check runs before the add, so a node that both sides reach on the same turn is not in the set yet.
+Both then step past it, and the join is never seen again.
+On A = `1 → 8`, B = `4 → 8` (node `8` shared), it returns `null` instead of `8`.
+The same happens when `headA == headB`.
+Rule: the two-pass version above fixes this too.
+
+**O(1) space cousin: switch-heads walkers**
+
+`a` walks A then B, and `b` walks B then A, so both travel m + n steps and meet at the join or at `null`.
 
 **Classic trap: matching values instead of nodes**
 
@@ -817,30 +899,47 @@ Rule: compare node references (`==` or a set of `ListNode`), never `val`.
 
 ### Memorize this
 
-1. `a = headA`, `b = headB`.
-2. While `a != b`, step both.
-3. A walker that hits `null` jumps to the other head.
-4. They meet at the join, or both at `null`.
-5. Return `a`.
+1. Either empty: `null`.
+2. One loop while either list is alive.
+3. Set has `headA` or `headB`: return it.
+4. Else add both.
+5. Advance the ones that are not `null`.
+6. Both end: `null`.
+
+His repo code, with the two bugs above still in it:
 
 ```java
 public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
-    ListNode a = headA, b = headB;
-    while (a != b) {
-        a = (a == null) ? headB : a.next;
-        b = (b == null) ? headA : b.next;
+    if(headA==null || headB==null) return null;
+    HashSet<ListNode> set=new HashSet<>();
+    while (headA!=null||headB!=null){
+        if(set.contains(headA)){
+            return headA;
+        }if(set.contains(headB)){
+            return headB;
+        }
+        else{
+            set.add(headB);
+            set.add(headA);
+
+        }
+        if(headA!=null)
+            headA=headA.next;
+
+        if(headB!=null)
+            headB=headB.next;
     }
-    return a;
+    return null;
 }
 ```
 
-Say in the interview: A set of A's nodes finds the join in O(m + n) time and O(m) space, and for O(1) space I let each walker switch to the other head so both travel m + n steps and meet at the join or at `null`.
+Say in the interview: I put every node of A into a set of node references, then walk B and return the first node already in the set, in O(m + n) time and O(m) space, and for O(1) space I let each walker switch to the other head so both travel m + n steps and meet at the join or at `null`.
 
 ### How it went
 
 On-time: he coded the set version and finished before the Easy clock ran out.
 The clock was armed late, with about 9 minutes left.
-The one-loop `add(null)` hole was named in the notes but is still in the code, so fix it before relying on this file.
+The one-loop `add(null)` hole and the same-turn join hole are still in the code, so fix it with the two-pass version before relying on this file.
 
 ---
 
@@ -873,11 +972,12 @@ Extra space is O(1) because you only keep two pointers and a dummy.
 
 ### How to solve it
 
-1. `dummy.next = head`, `left = dummy`, `right = head`.
-2. While `right != null`:
-3. If `right.next` has the same value, walk `right` until it is `null` or a new value, then `left.next = right`.
-4. Otherwise `left = right`, then `right = right.next`.
-5. Return `dummy.next`.
+1. Empty or one node: return `head`.
+2. `dummy = new ListNode(0, head)`, `left = dummy`, `right = head`.
+3. While `right != null`: save `val = right.val`.
+4. If `right.next` has the same `val`, walk `right` until it is `null` or a new value, then `left.next = right`.
+5. Otherwise `left = right`, then `right = right.next`.
+6. Return `dummy.next`.
 
 Trace on `1 → 1 → 2 → 3 → 3` (runs at both the head and the tail):
 
@@ -922,7 +1022,9 @@ On `1 → 2 → 2`, `right` stops on the second `2`, and `left.next = right` kee
 Rule: walk `right` until it is `null` or a new value.
 
 ```java
-while (right != null && right.val == val) right = right.next;
+while(right!=null &&right.val==val){
+    right=right.next;
+}
 ```
 
 **Hook inside the unique branch**
@@ -939,24 +1041,34 @@ Rule: count total moves of `right`; it is at most n.
 
 ### Memorize this
 
-1. Dummy in front; `left` on dummy, `right` on head.
-2. If `right` equals its next: walk `right` past the whole run.
-3. Then `left.next = right`.
-4. Else: `left = right`, `right = right.next`.
-5. Return `dummy.next`.
+1. Empty or one node: return `head`.
+2. Dummy in front; `left` on dummy, `right` on head.
+3. Save `val = right.val`.
+4. If `right.next` has the same `val`: walk `right` past the whole run, then `left.next = right`.
+5. Else: `left = right`, `right = right.next`.
+6. Return `dummy.next`.
 
 ```java
 public ListNode deleteDuplicates(ListNode head) {
-    ListNode dummy = new ListNode(0, head), left = dummy, right = head;
-    while (right != null) {
-        if (right.next != null && right.val == right.next.val) {
-            int val = right.val;
-            while (right != null && right.val == val) right = right.next;
+    if (head==null || head.next==null) return head;
+    ListNode dummy=new ListNode(0, head);
+    ListNode left=dummy;
+    ListNode right=head;
+    while(right!=null){
+        int val=right.val;
+        if(right.next!=null&&val==right.next.val){
+
+            while(right!=null &&right.val==val){
+                right=right.next;
+            }
             left.next = right;
-        } else {
-            left = right;
-            right = right.next;
         }
+        else{
+
+            left=right;
+            right=right.next;
+        }
+
     }
     return dummy.next;
 }
@@ -999,9 +1111,9 @@ Extra space is O(1) because you rewire in place and keep a few pointers.
 
 1. Empty or one node: return `true`.
 2. `slow` and `fast` on head; move while `fast.next != null && fast.next.next != null`.
-3. Start the back half at `slow.next`.
-4. Reverse it with the LC 206 loop (`prev = null`, `while (curr != null)`).
-5. `prev` is the back head; compare `head` and `prev` step by step until `prev` is `null`.
+3. Move `slow = slow.next`, so `slow` is the start of the back half.
+4. Reverse it with the LC 206 loop (`before = null`, save `tmp`, `while (slow != null)`).
+5. `before` is the back head; compare `head` and `before` step by step until `before` is `null`.
 6. Any mismatch returns `false`; otherwise `true`.
 
 Trace on `1 → 2 → 3 → 2 → 1`.
@@ -1022,26 +1134,26 @@ On `1 → 2 → 3`, `fast` reaches `3`, `fast.next` is `null`, and `fast.next.ne
 Rule: test `fast.next != null` first.
 
 ```java
-while (fast.next != null && fast.next.next != null)
+while(fast.next != null && fast.next.next != null){
 ```
 
 **Reverse started with "behind" on `slow` instead of `null`**
 
-Starting `prev` on `slow` makes the back half point back into the front half.
+Starting `before` on `slow` makes the back half point back into the front half.
 On `1 → 2 → 2 → 1`, this creates a cycle between the two `2`s, and the compare loop never reaches `null`.
-Rule: `prev = null`, same as LC 206.
+Rule: `before = null`, same as LC 206.
 
 **Reverse loop stopped one node early**
 
 `while (slow.next != null)` stops before the last node is flipped.
 On `1 → 2 → 2 → 1`, the back head ends up as `2` instead of `1`, and the first compare `1` vs `2` wrongly returns `false`.
-Rule: the reverse loop is `while (curr != null)`, and `prev` is the new back head.
+Rule: the reverse loop is `while (slow != null)`, and `before` is the new back head.
 
 **Looked for the middle again after the flip**
 
 After reversing, you do not need the middle.
-`prev` is the start of the reversed back half, and `head` is the start of the front half.
-Rule: compare `head` and `prev`; stop when `prev` is `null`.
+`before` is the start of the reversed back half, and `head` is the start of the front half.
+Rule: compare `head` and `before`; stop when `before` is `null`.
 
 **Wanted to weave the halves**
 
@@ -1051,30 +1163,38 @@ Rule: compare values, do not rewire the halves together.
 
 ### Memorize this
 
-1. Middle: `while (fast.next != null && fast.next.next != null)`.
-2. Back half starts at `slow.next`.
-3. Reverse it: `prev = null`, `while (curr != null)`.
-4. Walk `head` and `prev` together.
-5. Mismatch: `false`; back half done: `true`.
+1. Empty or one node: `true`.
+2. Middle: `while (fast.next != null && fast.next.next != null)`.
+3. `slow = slow.next` is the back half.
+4. Reverse it: `before = null`, `while (slow != null)`.
+5. Walk `head` and `before` together.
+6. Mismatch: `false`; back half done: `true`.
 
 ```java
 public boolean isPalindrome(ListNode head) {
-    if (head == null || head.next == null) return true;
-    ListNode slow = head, fast = head;
-    while (fast.next != null && fast.next.next != null) {
-        slow = slow.next;
-        fast = fast.next.next;
+    if(head==null||head.next==null) return true;
+    ListNode slow=head;
+    ListNode fast=head;
+    while(fast.next != null && fast.next.next != null){
+        slow=slow.next;
+        fast=fast.next.next;
     }
-    ListNode prev = null, curr = slow.next;
-    while (curr != null) {
-        ListNode next = curr.next;
-        curr.next = prev;
-        prev = curr;
-        curr = next;
+    ListNode before=null;
+    slow=slow.next;
+    while(slow!=null){
+        ListNode tmp=slow.next;
+        slow.next=before;
+        before=slow;
+        slow=tmp;
     }
-    for (ListNode a = head, b = prev; b != null; a = a.next, b = b.next) {
-        if (a.val != b.val) return false;
+    while(before!=null){
+        if (head.val!=before.val){
+            return false;
+        }
+        before=before.next;
+        head=head.next;
     }
+
     return true;
 }
 ```

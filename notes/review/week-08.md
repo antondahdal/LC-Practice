@@ -5,7 +5,7 @@ Week 8 covers two families: graph (grid walks, dependencies) and DP classics (bu
 | # | Problem | Pattern | Time / space | Result |
 |---|---|---|---|---|
 | 200 | Number of Islands | Graph (DFS flood fill on a grid) | O(rows × cols) / O(rows × cols) | coach-written, untimed |
-| 70 | Climbing Stairs | DP (Fibonacci) | O(n) / O(1) with two variables | on-time |
+| 70 | Climbing Stairs | DP (Fibonacci) | O(n) / O(n) table (O(1) with two variables) | on-time |
 | 207 | Course Schedule | Graph (topological sort, Kahn's BFS) | O(V + E) / O(V + E) | coach-written, untimed |
 
 How to tell them apart:
@@ -146,23 +146,22 @@ Return how many different ways reach the top.
 Pattern: DP, the Fibonacci shape.
 Your last move onto step `n` came from `n - 1` (a 1-step) or from `n - 2` (a 2-step).
 So `ways(n) = ways(n-1) + ways(n-2)`, with `ways(1) = 1` and `ways(2) = 2`.
-You only ever need the last two answers.
+Keep every answer in a table `stairs[i]`.
 Time O(n): one pass from 3 to n.
-Extra space O(1) with two variables, or O(n) with a table.
+Extra space O(n) for the table.
 
 ### How to solve it
 
 1. If `n` is 1 or 2, return `n`.
-2. Keep `twoBelow = 1`, `oneBelow = 2`.
-3. For step 3 to n: `current = oneBelow + twoBelow`, then shift.
-4. Return `oneBelow`.
+2. Make `stairs = new int[n+1]`, with `stairs[1] = 1` and `stairs[2] = 2`.
+3. For `i` from 3 to n: `stairs[i] = stairs[i-1] + stairs[i-2]`.
+4. Return `stairs[n]`.
 
-| step | twoBelow | oneBelow | current |
+| i | stairs[i-2] | stairs[i-1] | stairs[i] |
 |---|---|---|---|
-| start | 1 | 2 | — |
-| 3 | 2 | 3 | 3 |
-| 4 | 3 | 5 | 5 |
-| 5 | 5 | 8 | 8 |
+| 3 | 1 | 2 | 3 |
+| 4 | 2 | 3 | 5 |
+| 5 | 3 | 5 | 8 |
 
 ### Holes to patch
 
@@ -182,25 +181,26 @@ You only read the last two cells, so two variables give O(1); that is the usual 
 
 ### Memorize this
 
-1. `n <= 2` → return `n`.
-2. `twoBelow = 1`, `oneBelow = 2`.
-3. Loop 3..n: `current = oneBelow + twoBelow`, shift both.
-4. Return `oneBelow`.
+1. `n` is 1 or 2 → return `n`.
+2. `stairs = new int[n+1]`, `stairs[1] = 1`, `stairs[2] = 2`.
+3. Loop 3..n: `stairs[i] = stairs[i-1] + stairs[i-2]`.
+4. Return `stairs[n]`.
 
 ```java
 public int climbStairs(int n) {
-    if (n <= 2) return n;
-    int twoBelow = 1, oneBelow = 2;
-    for (int i = 3; i <= n; i++) {
-        int current = oneBelow + twoBelow;
-        twoBelow = oneBelow;
-        oneBelow = current;
+    if(n==1||n==2) return n;
+    int[] stairs=new int[n+1];
+    stairs[0]=0;
+    stairs[1]=1;
+    stairs[2]=2;
+    for(int i=3;i<=n;i++){
+        stairs[i]=stairs[i-1]+stairs[i-2];
     }
-    return oneBelow;
+    return stairs[n];
 }
 ```
 
-Say in the interview: the last move came from one or two steps below, so ways(n) is the sum of the two before it; I keep only those two, O(n) time and O(1) space.
+Say in the interview: the last move came from one or two steps below, so ways(n) is the sum of the two before it; I fill a table from 3 to n, O(n) time and O(n) space, and I can drop it to two variables for O(1).
 
 ### How it went
 
@@ -280,24 +280,33 @@ Watch the direction: `[1, 0]` means 0 unlocks 1.
 ```java
 public boolean canFinish(int numCourses, int[][] prerequisites) {
     List<List<Integer>> unlocks = new ArrayList<>();
-    for (int i = 0; i < numCourses; i++) unlocks.add(new ArrayList<>());
+    for (int i = 0; i < numCourses; i++) {
+        unlocks.add(new ArrayList<>());
+    }
     int[] waitingOn = new int[numCourses];
-    for (int[] p : prerequisites) {
-        unlocks.get(p[1]).add(p[0]);
-        waitingOn[p[0]]++;
+
+    for (int[] pair : prerequisites) {
+        int course = pair[0];
+        int before = pair[1];
+        unlocks.get(before).add(course);
+        waitingOn[course]++;
     }
 
     Queue<Integer> ready = new ArrayDeque<>();
-    for (int i = 0; i < numCourses; i++) if (waitingOn[i] == 0) ready.add(i);
+    for (int i = 0; i < numCourses; i++) {
+        if (waitingOn[i] == 0) ready.add(i);
+    }
 
     int taken = 0;
     while (!ready.isEmpty()) {
         int current = ready.poll();
         taken++;
         for (int next : unlocks.get(current)) {
-            if (--waitingOn[next] == 0) ready.add(next);
+            waitingOn[next]--;
+            if (waitingOn[next] == 0) ready.add(next);
         }
     }
+
     return taken == numCourses;
 }
 ```

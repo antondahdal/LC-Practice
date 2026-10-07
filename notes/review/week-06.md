@@ -63,7 +63,7 @@ Extra space is O(h) for the recursion stack, which is O(log n) on a balanced tre
 1. If the node is `null`, return `0`.
 2. Ask the left subtree for its height.
 3. Ask the right subtree for its height.
-4. Return `1 + max(left, right)`.
+4. Return `max(left, right) + 1`.
 
 Trace on a lopsided tree, where the deeper side is on the left:
 
@@ -102,14 +102,17 @@ Rule: do not assume any value order unless the problem says BST.
 ### Memorize this
 
 1. `null` → `0`.
-2. `left = maxDepth(left)`.
-3. `right = maxDepth(right)`.
-4. Return `1 + max(left, right)`.
+2. `left = maxDepth(root.left)`.
+3. `right = maxDepth(root.right)`.
+4. Return `Math.max(left, right) + 1`.
 
 ```java
 public int maxDepth(TreeNode root) {
-    if (root == null) return 0;
-    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+    if(root==null) return 0;
+    int left=maxDepth(root.left);
+    int right=maxDepth(root.right);
+
+    return Math.max(left, right)+1 ;
 }
 ```
 
@@ -154,7 +157,7 @@ Extra space is O(h) for the recursion stack, worst O(n) on a chain.
 ### How to solve it
 
 1. If the node is `null`, return `null`.
-2. Save `left`, set `left = right`, set `right = saved`.
+2. Save `tmp = root.right`, set `root.right = root.left`, set `root.left = tmp`.
 3. Invert the new left subtree.
 4. Invert the new right subtree.
 5. Return the node.
@@ -185,10 +188,6 @@ His solution was right, but the JUnit helper that rebuilt the tree used an `Arra
 After an invert, a node's left kid can be `null`, and `ArrayDeque.add(null)` throws `NullPointerException`.
 Rule: if you must offer `null` kids into a queue, use `LinkedList`; otherwise check `!= null` before offering.
 
-```java
-Queue<TreeNode> q = new LinkedList<>(); // accepts null
-```
-
 **Classic trap: swapping between the two calls (in-order)**
 
 If you invert the left subtree, then swap, then invert `root.right`, the "right" you visit is the subtree you already inverted.
@@ -198,18 +197,19 @@ Rule: swap before both calls or after both calls, never between.
 ### Memorize this
 
 1. `null` → return `null`.
-2. Save left, swap left and right.
+2. Save right in `tmp`, move left to right, put `tmp` on the left.
 3. Recurse into both kids.
 4. Return the node.
 
 ```java
 public TreeNode invertTree(TreeNode root) {
-    if (root == null) return null;
-    TreeNode tmp = root.left;
-    root.left = root.right;
-    root.right = tmp;
-    invertTree(root.left);
-    invertTree(root.right);
+    if (root==null) return null;
+
+    TreeNode tmp=root.right;
+    root.right=root.left;
+    root.left=tmp;
+    invertTree( root.left);
+    invertTree( root.right);
     return root;
 }
 ```
@@ -260,8 +260,8 @@ Extra space is O(n) for the queue, which holds up to the widest level (about n /
 1. If the root is `null`, return an empty list (not `null`).
 2. Offer the root.
 3. While the queue is not empty, read `size = queue.size()` once.
-4. Make a new row, and loop `size` times: poll, add the value, offer the non-null left and right kids.
-5. Add the row to the answer.
+4. Make a new row `tmpArr`, and loop `size` times: `remove()` a node, add its value, offer the non-null left and right kids.
+5. Add the row to `answer`.
 
 Trace on a full tree `1 / 2 3 / 4 5 6 7`, where two parents feed one row:
 
@@ -304,7 +304,8 @@ Rule: read `size` once, before the inner `for`.
 
 ```java
 int size = queue.size();
-for (int i = 0; i < size; i++) { ... }
+ArrayList<Integer> tmpArr = new ArrayList<>();
+for (int i = 0; i < size; i++) {
 ```
 
 **Special cases that are not needed**
@@ -319,27 +320,34 @@ Rule: empty input returns an empty list, and the loop needs no extra counters.
 1. `null` root → empty list.
 2. Offer root.
 3. While queue not empty: `size = queue.size()`.
-4. Loop `size` times: poll, add value, offer non-null kids.
-5. Add the row.
+4. New `tmpArr`; loop `size` times: `remove()`, add value, offer non-null kids.
+5. Add `tmpArr` to `answer`.
 
 ```java
 public List<List<Integer>> levelOrder(TreeNode root) {
-    List<List<Integer>> out = new ArrayList<>();
-    if (root == null) return out;
+    List<List<Integer>> answer = new ArrayList<List<Integer>>();
+    if (root == null) return answer;
+
     Queue<TreeNode> queue = new ArrayDeque<>();
     queue.add(root);
+
     while (!queue.isEmpty()) {
         int size = queue.size();
-        List<Integer> row = new ArrayList<>(size);
+        ArrayList<Integer> tmpArr = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            TreeNode node = queue.poll();
-            row.add(node.val);
-            if (node.left != null) queue.add(node.left);
-            if (node.right != null) queue.add(node.right);
+            TreeNode tmp = queue.remove();
+            tmpArr.add(tmp.val);
+            if (tmp.left != null) {
+                queue.add(tmp.left);
+            }
+            if (tmp.right != null) {
+                queue.add(tmp.right);
+            }
         }
-        out.add(row);
+        answer.add(tmpArr);
     }
-    return out;
+
+    return answer;
 }
 ```
 
@@ -387,22 +395,22 @@ Extra space is O(h) for the recursion stack, worst O(n) on a chain.
 
 ### How to solve it
 
-1. Start with the open window `(Long.MIN_VALUE, Long.MAX_VALUE)`.
+1. Call `check(root, Long.MIN_VALUE, Long.MAX_VALUE)`.
 2. `null` → `true`.
-3. If `val <= low` or `val >= high`, return `false`.
-4. Check the left kid with `(low, val)` and the right kid with `(val, high)`.
-5. Return `left && right`.
+3. If `root.val <= low` or `root.val >= max`, return `false`.
+4. Check the right kid with `(root.val, max)` and the left kid with `(low, root.val)`.
+5. Return `right && left`.
 
-Trace on the tree above:
+Trace on the tree above (right kid first, as in his code):
 
 | Call | window | fits? | returns |
 |---|---|---|---|
 | 5 | (−∞, +∞) | yes | depends on kids |
-| 3 | (−∞, 5) | yes | true |
 | 7 | (5, +∞) | yes | depends on kids |
+| null (right of 7) | — | — | true |
 | 4 | (5, 7) | no, `4 <= 5` | **false** |
 | 7 | — | — | false |
-| 5 | — | — | **false** |
+| 5 | — | — | **false** (`&&` stops, so `3` is never checked) |
 
 ### Holes to patch
 
@@ -441,25 +449,27 @@ Rule: reject with `<=` and `>=`.
 
 ### Memorize this
 
-1. `check(node, low, high)`, first call with `long` min and max.
+1. `check(root, low, max)`, first call with `long` min and max.
 2. `null` → `true`.
-3. `val <= low || val >= high` → `false`.
-4. Left gets `(low, val)`, right gets `(val, high)`.
-5. Return `left && right`.
+3. `root.val <= low || root.val >= max` → `false`.
+4. Right gets `(root.val, max)`, left gets `(low, root.val)`.
+5. Return `right && left`.
 
 ```java
 public boolean isValidBST(TreeNode root) {
-    return check(root, Long.MIN_VALUE, Long.MAX_VALUE);
+    return check(root,Long.MIN_VALUE,Long.MAX_VALUE);
 }
 
-private boolean check(TreeNode node, long low, long high) {
-    if (node == null) return true;
-    if (node.val <= low || node.val >= high) return false;
-    return check(node.left, low, node.val) && check(node.right, node.val, high);
+private boolean check(TreeNode root,long low,long max){
+
+    if (root==null) return true;
+    if (root.val <= low || root.val >= max) return false;
+    return check(root.right,root.val, max) &&
+        check(root.left,low, root.val) ;
 }
 ```
 
-Say in the interview: Each node must fit strictly inside a range set by its ancestors, so I pass `low` and `high` down, tightening one side per step, which is O(n) time and O(h) stack.
+Say in the interview: Each node must fit strictly inside a range set by its ancestors, so I pass `low` and `max` down, tightening one side per step, which is O(n) time and O(h) stack.
 
 ### How it went
 
@@ -503,22 +513,23 @@ Extra space is O(h) for the recursion stack.
 
 ### How to solve it
 
-1. Keep a field for how many nodes are still to be visited (or a counter).
-2. In-order: recurse left first.
-3. If the answer was already found on the left, stop and pass it up.
-4. Count this node; if it is the `k`th, record its value and stop.
-5. Otherwise recurse right.
+1. Keep a field `counter = 0`, shared by every call.
+2. `inorder(node, k)`: `null` → `0` (nothing found here).
+3. `left = inorder(node.left, k)`; if `counter == k`, the answer was found on the left, so return `left`.
+4. `counter++`; if `counter == k`, return `node.val`.
+5. `right = inorder(node.right, k)`; if `counter == k`, return `right`.
+6. Otherwise return `0`.
 
 Trace on the tree above, `k = 2`:
 
-| Step | node | count after visiting | found? |
+| Step | node | counter after | returns |
 |---|---|---|---|
-| go left from 3 | 1 | — | — |
-| left of 1 is null | — | — | — |
-| visit 1 | 1 | 1 | no |
-| go right from 1, left of 2 is null | 2 | — | — |
-| visit 2 | 2 | 2 | **yes, answer 2** |
-| back at 1, back at 3 | — | — | stop, 3 and 4 never counted |
+| go left from 3, then left from 1 hits null | — | 0 | 0 |
+| visit 1 | 1 | 1 | not yet, go right |
+| left of 2 is null | — | 1 | 0 |
+| visit 2 | 2 | 2 | **2** (`counter == k`) |
+| back at 1, `right = 2` | 1 | 2 | 2 |
+| back at 3, `left = 2` | 3 | 2 | **2**, so 3 and 4 are never counted |
 
 ### Holes to patch
 
@@ -554,33 +565,41 @@ Rule: after each recursive call, if the answer is already found, return it right
 When the count hits `k`, the current node is the answer, not its kid.
 Rule: return `node.val` at the visit.
 
-### Memorize this
+**The field is never reset**
 
-1. Field `k` (remaining) and field `answer`.
-2. In-order: left first.
-3. If `k == 0` after the left call, return.
-4. `k--`; if it hits `0`, `answer = node.val`, return.
-5. Recurse right.
+`counter` starts at `0` only when the object is created.
+Calling `kthSmallest` twice on the same object starts the second call with the old count and returns `0`.
+Rule: reset the shared counter at the top of the public method.
 
 ```java
-private int k;
-private int answer;
+counter = 0;
+```
+
+### Memorize this
+
+1. Field `counter = 0`.
+2. `null` → `0`.
+3. `left = inorder(node.left, k)`; `counter == k` → return `left`.
+4. `counter++`; `counter == k` → return `node.val`.
+5. `right = inorder(node.right, k)`; `counter == k` → return `right`.
+6. Return `0`.
+
+```java
+int counter=0;
 
 public int kthSmallest(TreeNode root, int k) {
-    this.k = k;
-    inorder(root);
-    return answer;
+    return  inorder(root,k);
 }
+int inorder(TreeNode node,int k) {
 
-private void inorder(TreeNode node) {
-    if (node == null || k == 0) return;
-    inorder(node.left);
-    if (k == 0) return;
-    if (--k == 0) {
-        answer = node.val;
-        return;
-    }
-    inorder(node.right);
+    if (node == null) return 0;
+    int left = inorder(node.left, k);
+    if (counter == k) return left;// left
+    counter++;
+    if (counter==k) return node.val;
+    int right =inorder(node.right,k);
+    if (counter == k) return right;
+    return 0;  // right
 }
 ```
 
@@ -629,7 +648,7 @@ Extra space is O(n) for the queue at the widest level.
 1. `null` root → empty list.
 2. Offer the root.
 3. While the queue is not empty, freeze `size`.
-4. Loop `size` times: poll; if `i == size - 1`, add the value; offer non-null left, then right.
+4. Loop `size` times: `remove()` into `currNode`; if `i == size - 1`, add its value to `retList`; offer non-null left, then right.
 
 Trace on the tree above:
 
@@ -670,25 +689,33 @@ Rule: check kids before offering, or use `LinkedList` if you offer nulls on purp
 1. `null` root → empty list.
 2. Offer root.
 3. Freeze `size` each level.
-4. Poll `size` times; add the value when `i == size - 1`.
+4. `remove()` `size` times; add the value to `retList` when `i == size - 1`.
 5. Offer non-null left, then right.
 
 ```java
 public List<Integer> rightSideView(TreeNode root) {
-    List<Integer> out = new ArrayList<>();
-    if (root == null) return out;
-    Queue<TreeNode> queue = new ArrayDeque<>();
+    Queue<TreeNode> queue = new LinkedList<>();
+    ArrayList<Integer> retList = new ArrayList<>();
+    if (root == null) return retList;
+
     queue.add(root);
     while (!queue.isEmpty()) {
         int size = queue.size();
         for (int i = 0; i < size; i++) {
-            TreeNode node = queue.poll();
-            if (i == size - 1) out.add(node.val);
-            if (node.left != null) queue.add(node.left);
-            if (node.right != null) queue.add(node.right);
+            TreeNode currNode = queue.remove();
+            if (i == size - 1) {
+                retList.add(currNode.val);
+            }
+            if (currNode.left != null) {
+                queue.add(currNode.left);
+            }
+            if (currNode.right != null) {
+                queue.add(currNode.right);
+            }
         }
     }
-    return out;
+
+    return retList;
 }
 ```
 
@@ -736,20 +763,24 @@ Extra space is O(n) for the two queues in BFS, or O(h) for the stack in DFS.
 
 BFS version (his):
 
-1. Offer `p` into one queue and `q` into the other (use `LinkedList`, nulls are allowed).
-2. Poll one node from each.
-3. Both `null` → `continue`.
-4. One `null`, or values differ → `false`.
-5. Offer `a.left`, `a.right` and `b.left`, `b.right` **without checking them**.
-6. Queues empty → `true`.
+1. Both roots `null` → `true`; exactly one `null` → `false`.
+2. Add `p` into `queuep` and `q` into `queueq` (both `LinkedList`, nulls are allowed).
+3. Loop while either queue is not empty; if only one is empty → `false`.
+4. Remove `cuurP` and `currQ`.
+5. Both `null` → `continue`; one `null`, or values differ → `false`.
+6. Pre-check the right kids, then the left kids: one `null` or different values → `false`.
+7. Add `cuurP.left`, `cuurP.right` to `queuep` and `currQ.left`, `currQ.right` to `queueq`.
+8. Loop ends → `true`.
 
 Trace on the trees above:
 
-| Step | polled pair | check | queue p after | queue q after |
+| Step | removed pair | check | queuep after | queueq after |
 |---|---|---|---|---|
-| 1 | 1, 1 | match | 2, null | null, 2 |
-| 2 | 2, null | one null | — | — |
-| — | — | return **false** | — | — |
+| 1 | 1, 1 | pair matches | — | — |
+| 1 | — | right kids: `null` vs `2` | — | — |
+| — | — | return **false** before anything is added | — | — |
+
+Without the kid pre-checks (step 6), the walk adds `2, null` and `null, 2`, removes the pair `2, null` next, and returns `false` there.
 
 ### Holes to patch
 
@@ -777,22 +808,57 @@ Rule: use `LinkedList` when the queue must hold nulls.
 A mismatch is a normal answer, not an error.
 Rule: `return false`, do not throw.
 
+**Shorter and less space: the recursive form**
+
+The same two checks on the pair, then `isSameTree(p.left, q.left) && isSameTree(p.right, q.right)`, need no queues.
+That is O(h) stack instead of O(n) queue space.
+
 ### Memorize this
 
-1. Both `null` → `true`.
-2. One `null` or values differ → `false`.
-3. Return `same(left, left) && same(right, right)`.
-4. BFS form: poll a pair, same two checks, offer kids blind.
+1. Both roots `null` → `true`; one `null` → `false`.
+2. Two `LinkedList` queues, add `p` and `q`.
+3. While either is not empty: one empty → `false`.
+4. Remove a pair: both `null` → `continue`; one `null` or values differ → `false`.
+5. Pre-check right kids, then left kids (null mismatch or value mismatch → `false`).
+6. Add left and right kids of both into their queues.
+7. Loop ends → `true`.
 
 ```java
 public boolean isSameTree(TreeNode p, TreeNode q) {
-    if (p == null && q == null) return true;
-    if (p == null || q == null || p.val != q.val) return false;
-    return isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+    if(p==null&&q==null) return true;
+    if((p==null&&q!=null)||(p!=null&&q==null)) return false;
+    Queue<TreeNode> queuep = new LinkedList<>();
+    Queue<TreeNode> queueq = new LinkedList<>();
+    queuep.add(p);
+    queueq.add(q);
+    while(!queuep.isEmpty()||!queueq.isEmpty()){
+        if(queuep.isEmpty()||queueq.isEmpty()) return false;
+        TreeNode cuurP=queuep.remove();
+        TreeNode currQ=queueq.remove();
+        if((cuurP==null && currQ==null )) continue;
+        if((cuurP==null && currQ!=null )||(cuurP!=null && currQ==null )
+            ||(cuurP.val!=currQ.val))  return false;
+
+        if((cuurP.right!=null &&currQ.right==null)||(cuurP.right==null &&currQ.right!=null)
+        ) return false;
+        if((cuurP.right!=null &&currQ.right!=null)&&(cuurP.right.val!=currQ.right.val))return false;
+
+        if((cuurP.left!=null &&currQ.left==null)||(cuurP.left==null &&currQ.left!=null)
+        ) return false;
+        if( (cuurP.left!=null &&currQ.left!=null)&&(cuurP.left.val!=currQ.left.val))return false;
+
+        queuep.add(cuurP.left);
+        queuep.add(cuurP.right);
+        queueq.add(currQ.left);
+        queueq.add(currQ.right);
+
+    }
+
+    return true;
 }
 ```
 
-Say in the interview: I walk both trees in lockstep, and at each position both null is a match while one null or different values is a mismatch, which is O(n) time and O(h) stack.
+Say in the interview: I walk both trees in lockstep with two queues, and at each position both null is a match while one null or different values is a mismatch, which is O(n) time and O(n) queue space.
 
 ### How it went
 
@@ -874,7 +940,9 @@ The answer is `false`.
 Rule: only compare at a node with no children.
 
 ```java
-if (node.left == null && node.right == null) return remaining == 0;
+if (root.left == null && root.right == null) {
+    return remaining == 0;
+}
 ```
 
 **Ignoring the recursive returns**
@@ -897,10 +965,19 @@ Rule: first line is `if (node == null) return false;`.
 
 ```java
 public boolean hasPathSum(TreeNode root, int targetSum) {
+    return dfs(root, targetSum);
+}
+
+private boolean dfs(TreeNode root, int remaining) {
     if (root == null) return false;
-    int remaining = targetSum - root.val;
-    if (root.left == null && root.right == null) return remaining == 0;
-    return hasPathSum(root.left, remaining) || hasPathSum(root.right, remaining);
+
+    remaining -= root.val;
+
+    if (root.left == null && root.right == null) {
+        return remaining == 0;
+    }
+
+    return dfs(root.left, remaining) || dfs(root.right, remaining);
 }
 ```
 
@@ -1017,9 +1094,12 @@ It means: I am not the split, so pass up whatever was found below, or `null`.
 
 ```java
 public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
-    if (root == null || root == p || root == q) return root;
+    if (root == null) return null;
+    if (root == p || root == q) return root;
+
     TreeNode left = lowestCommonAncestor(root.left, p, q);
     TreeNode right = lowestCommonAncestor(root.right, p, q);
+
     if (left != null && right != null) return root;
     return left != null ? left : right;
 }
@@ -1082,22 +1162,22 @@ Extra space is O(n) for the queues in BFS, or O(h) for the stack in DFS.
 BFS version (his, after the fix):
 
 1. `null` root → `true`.
-2. Offer `root.left` into queue A and `root.right` into queue B (`LinkedList`).
-3. Poll one from each.
+2. Add `root.left` into queue `left` and `root.right` into queue `right` (`LinkedList`).
+3. While `left` is not empty, remove `leftNode` and `rightNode`.
 4. Both `null` → `continue`.
-5. One `null`, or values differ → `false`.
-6. Offer `a.left` into A and `b.right` into B (outer pair).
-7. Offer `a.right` into A and `b.left` into B (inner pair).
+5. One `null` → `false`; values differ → `false`.
+6. Add `leftNode.left` into `left` and `rightNode.right` into `right` (outer pair).
+7. Add `leftNode.right` into `left` and `rightNode.left` into `right` (inner pair).
 
 Trace on the trap tree (identical sides):
 
-| Step | polled pair | check | A after | B after |
+| Step | removed pair | check | `left` after | `right` after |
 |---|---|---|---|---|
 | 1 | 2, 2 | match | 3, 4 | 4, 3 |
 | 2 | 3, 4 | values differ | — | — |
 | — | — | return **false** | — | — |
 
-If B got `b.left, b.right` (Same Tree order), step 2 would compare `3` with `3` and the walk would wrongly return `true`.
+If `right` got `rightNode.left, rightNode.right` (Same Tree order), step 2 would compare `3` with `3` and the walk would wrongly return `true`.
 
 ### Holes to patch
 
@@ -1114,8 +1194,10 @@ On the trap tree that compares `3` with `3` and `4` with `4`, so it returns `tru
 Rule: offer outer then inner.
 
 ```java
-left.add(a.left);  right.add(b.right);
-left.add(a.right); right.add(b.left);
+left.add(leftNode.left);
+right.add(rightNode.right);
+left.add(leftNode.right);
+right.add(rightNode.left);
 ```
 
 **Pre-checking the kids instead of the polled pair**
@@ -1133,29 +1215,49 @@ Rule: never read `.val` until the polled pair passed the null checks.
 **Never handling a polled `null`**
 
 Once kids are offered blind, `(null, null)` pairs come out of the queues.
-Rule: `if (a == null && b == null) continue;` comes first.
+Rule: `if (leftNode == null && rightNode == null) continue;` comes first.
+
+**Less space: the recursive form**
+
+A helper `mirror(a, b)` with the same checks, returning `mirror(a.left, b.right) && mirror(a.right, b.left)`, needs no queues.
+That is O(h) stack instead of O(n) queue space.
 
 ### Memorize this
 
 1. `null` root → `true`.
-2. Compare `root.left` with `root.right`.
-3. Both `null` → `true`; one `null` or values differ → `false`.
-4. Recurse outer (`a.left`, `b.right`) and inner (`a.right`, `b.left`).
-5. BFS form: two queues, poll a pair, same checks, offer outer then inner.
+2. Queue `left` gets `root.left`, queue `right` gets `root.right`.
+3. Remove a pair: both `null` → `continue`.
+4. One `null` → `false`; values differ → `false`.
+5. Add outer pair (`leftNode.left`, `rightNode.right`), then inner pair (`leftNode.right`, `rightNode.left`).
+6. Loop ends → `true`.
 
 ```java
 public boolean isSymmetric(TreeNode root) {
-    return root == null || mirror(root.left, root.right);
-}
+    if (root == null) return true;
 
-private boolean mirror(TreeNode a, TreeNode b) {
-    if (a == null && b == null) return true;
-    if (a == null || b == null || a.val != b.val) return false;
-    return mirror(a.left, b.right) && mirror(a.right, b.left);
+    Queue<TreeNode> left = new LinkedList<>();
+    Queue<TreeNode> right = new LinkedList<>();
+    left.add(root.left);
+    right.add(root.right);
+
+    while (!left.isEmpty()) {
+        TreeNode leftNode = left.remove();
+        TreeNode rightNode = right.remove();
+
+        if (leftNode == null && rightNode == null) continue;
+        if (leftNode == null || rightNode == null) return false;
+        if (leftNode.val != rightNode.val) return false;
+
+        left.add(leftNode.left);
+        right.add(rightNode.right);
+        left.add(leftNode.right);
+        right.add(rightNode.left);
+    }
+    return true;
 }
 ```
 
-Say in the interview: I compare the left and right subtrees as a pair, where both null is a match and otherwise the values must match and the outer and inner kids must mirror each other, which is O(n) time and O(h) stack.
+Say in the interview: I compare the left and right subtrees as pairs with two queues, where both null is a match and otherwise the values must match and I enqueue the outer pair and then the inner pair, which is O(n) time and O(n) queue space.
 
 ### How it went
 
@@ -1197,10 +1299,11 @@ Extra space is O(n) for the queue at the widest level.
 ### How to solve it
 
 1. `null` root → empty list.
-2. Offer the root, `leftToRight = true`.
-3. Freeze `size`, poll `size` nodes into a row, offer left then right.
-4. If the level is right-to-left, reverse the row.
-5. Add the row and flip the flag once.
+2. A root with no kids → `[[root.val]]` (his special case; the loop would handle it anyway).
+3. `flag = false` (it means "reverse this row"), offer the root.
+4. Freeze `size`, `remove()` `size` nodes into `tmpList`, offer left then right.
+5. If `flag`, reverse `tmpList`, add it, set `flag = false`.
+6. Else add `tmpList` as is, set `flag = true`.
 
 Trace on `1 / 2 3 / 4 5 6 7`:
 
@@ -1226,38 +1329,57 @@ Rule: always offer left then right; only reverse the finished row.
 **Extra special case and double flag flips (nits)**
 
 A single-node special case is not needed; the loop already returns `[[root]]`.
-Flipping the flag in both branches of an if/else is the same as `leftToRight = !leftToRight` once after the row.
+Flipping the flag in both branches of an if/else is the same as `flag = !flag` once after the row.
 He also left unused imports.
 Rule: let the general loop handle the root, and flip the flag in one line.
 
 ### Memorize this
 
-1. Same as Level Order: offer root, freeze `size`, poll `size` into a row.
+1. Same as Level Order: offer root, freeze `size`, `remove()` `size` nodes into `tmpList`.
 2. Always offer left, then right.
-3. Reverse the row when the flag says right-to-left.
-4. Add the row, flip the flag once.
+3. `flag` starts `false`; when it is `true`, reverse `tmpList`.
+4. Add the row, flip `flag`.
 
 ```java
 public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
-    List<List<Integer>> out = new ArrayList<>();
-    if (root == null) return out;
-    Queue<TreeNode> queue = new ArrayDeque<>();
-    queue.add(root);
-    boolean leftToRight = true;
-    while (!queue.isEmpty()) {
-        int size = queue.size();
-        List<Integer> row = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            TreeNode node = queue.poll();
-            row.add(node.val);
-            if (node.left != null) queue.add(node.left);
-            if (node.right != null) queue.add(node.right);
-        }
-        if (!leftToRight) Collections.reverse(row);
-        out.add(row);
-        leftToRight = !leftToRight;
+    List<List<Integer>> res=new ArrayList<List<Integer>>();
+    Queue<TreeNode> que=new LinkedList<>();
+    if(root==null ) return res;
+    if((root.left==null&&root.right==null)){
+        ArrayList<Integer> tmpList=new ArrayList<>();
+        tmpList.add(root.val);
+        res.add(tmpList);
+        return  res;
     }
-    return out;
+    boolean flag=false;
+    que.add(root);
+    while(!que.isEmpty()){
+        int size=que.size();
+
+        ArrayList<Integer> tmpList=new ArrayList<>();
+        for(int i=0;i<size;i++){
+            TreeNode tmp=que.remove();
+            tmpList.add(tmp.val);
+            if(tmp.left!=null){
+                que.add(tmp.left);
+            }
+            if(tmp.right!=null){
+                que.add(tmp.right);
+            }
+        }
+        if(flag) {
+            Collections.reverse(tmpList);
+            res.add(tmpList);
+            flag=false;
+        }
+        else{
+            res.add(tmpList);
+            flag=true;
+        }
+
+    }
+
+    return res;
 }
 ```
 
@@ -1304,18 +1426,19 @@ Extra space is O(n + m) in his version: the BFS queue plus the recursion of the 
 
 ### How to solve it
 
-1. Scan every node of `root` (queue or recursion).
-2. At each node, run `same(node, subRoot)`.
-3. If it returns `true`, return `true`.
-4. Otherwise keep scanning, and always enqueue (or recurse into) both kids.
-5. Scan ends → `false`.
+1. Both `null` → `true`; one `null` → `false`.
+2. BFS over `root` with a queue `que`.
+3. Remove `tmp`; if `tmp.val == subRoot.val`, run `pre(tmp, subRoot)`, and if it is `true`, return `true`.
+4. Always offer the non-null kids of `tmp`, match or not.
+5. Queue empty → return `flag` (`false`).
+6. `pre` is Same Tree: both `null` → `true`, one `null` → `false`, values differ → `false`, then `left && right`.
 
 Trace on the trees above:
 
-| Scan node | `same(node, subRoot)` | why | continue? |
+| Removed `tmp` | value equals 4? | `pre(tmp, subRoot)` | continue? |
 |---|---|---|---|
-| 3 | false | `3 != 4` | yes, enqueue 4 and 5 |
-| 4 | **true** | 4 = 4, (1, 1) match, (2, 2) match, all kids null pairs | return **true** |
+| 3 | no | not called | yes, enqueue 4 and 5 |
+| 4 | yes | **true**: (1, 1) match, (2, 2) match, all kids null pairs | return **true** |
 
 ### Holes to patch
 
@@ -1335,7 +1458,7 @@ Rule: check only the pair you were handed; `(null, null)` is a match.
 
 He called `pre(left)` and `pre(right)` and ignored what they returned, then returned `node.val == subRoot.val`, which is always `true` at that point.
 On `root = 4 / 1 3`, `subRoot = 4 / 1 2`, that returns `true`, but the answer is `false`.
-Rule: `return same(a.left, b.left) && same(a.right, b.right);`
+Rule: `return pre(node.left, subRoot.left) && pre(node.right, subRoot.right);`
 
 **Throwing, or stopping, on the first mismatch**
 
@@ -1349,27 +1472,48 @@ Rule: say O(n · m) time, because every node of `root` can start an O(m) check.
 
 ### Memorize this
 
-1. `root == null` → return `subRoot == null`.
-2. `same(root, subRoot)` → `true`.
-3. Else try `root.left`, then `root.right`.
-4. `same` is Same Tree: both null true, one null or values differ false, then `left && right`.
+1. Both `null` → `true`; one `null` → `false`.
+2. BFS over `root`.
+3. Value matches `subRoot.val` → run `pre`; `true` → return `true`.
+4. Always offer non-null kids.
+5. Queue empty → `false`.
+6. `pre` is Same Tree: both null true, one null false, values differ false, then `left && right`.
 
 ```java
 public boolean isSubtree(TreeNode root, TreeNode subRoot) {
-    if (root == null) return subRoot == null;
-    return same(root, subRoot)
-            || isSubtree(root.left, subRoot)
-            || isSubtree(root.right, subRoot);
-}
+    if (subRoot== null && root==null) return true;
+    if (subRoot== null || root==null) return false;
+    boolean flag=false;
 
-private boolean same(TreeNode a, TreeNode b) {
-    if (a == null && b == null) return true;
-    if (a == null || b == null || a.val != b.val) return false;
-    return same(a.left, b.left) && same(a.right, b.right);
+    Queue<TreeNode> que=new LinkedList<>();
+    que.add(root);
+    while (!que.isEmpty()){
+        TreeNode tmp=que.remove();
+        if(tmp.val==subRoot.val){
+            flag=   pre(tmp, subRoot);
+            if(flag) return flag;
+        }
+        if(tmp.left!=null){
+            que.add(tmp.left);
+        }
+        if(tmp.right!=null){
+            que.add(tmp.right);
+        }
+
+    }
+
+    return flag;
+}
+boolean pre(TreeNode node,TreeNode subRoot) {
+    if (node == null &&subRoot==null) return true;
+    if ((node == null ||subRoot==null)) return false;
+    if(node.val!=subRoot.val) return false;      // here
+
+    return pre(node.left, subRoot.left)&& pre(node.right,subRoot.right);
 }
 ```
 
-Say in the interview: At every node of the big tree I run a Same Tree check against the small tree and keep scanning on a mismatch, which is O(n · m) time and O(h) stack.
+Say in the interview: At every node of the big tree whose value matches the small tree's root I run a Same Tree check and keep scanning on a mismatch, which is O(n · m) time and O(n + m) space for the queue and the check's recursion.
 
 ### How it went
 
@@ -1400,40 +1544,43 @@ Answer: `6`.
 
 ### The idea
 
-His version: BFS, count every node.
-That is O(n) time and O(n) extra space for the queue.
+His version: BFS over the whole tree, collecting every value, and the list size is the count.
+That is O(n) time because every node is removed once.
+Extra space is O(n) for the queue plus the list `x` of values.
 
-The fast version: skip whole perfect subtrees without visiting them.
-A perfect tree with `h` levels has `2^h − 1` nodes, which in Java is `(1 << h) - 1`.
-In a complete tree, walk only the left edge and only the right edge from a node and count their lengths.
-Equal lengths mean the subtree is perfect, so return `(1 << h) - 1` without recursing.
-Different lengths mean return `1 + count(left) + count(right)`.
-At every node one of the two kids is perfect, so that call stops right after its edge walk, and only one side goes deep.
-
-Time for the fast version is O(log² n): about log n calls go deep, and each does an edge walk of about log n steps.
-Extra space for the fast version is O(log n) for the recursion, because a complete tree has height about log n.
+The follow-up asks for less than O(n); that version is under Holes to patch.
 
 ### How to solve it
 
-Fast version:
-
-1. `null` → `0`.
-2. Count the left edge `l` (go left until `null`).
-3. Count the right edge `r` (go right until `null`).
-4. `l == r` → return `(1 << l) - 1`.
-5. Else return `1 + count(left) + count(right)`.
+1. `null` root → `0`.
+2. Add the root to a `LinkedList` queue `que`.
+3. While `que` is not empty: remove `tmp`, add `tmp.val` to the list `x`.
+4. Offer the non-null left kid, then the non-null right kid.
+5. Return `x.size()`.
 
 Trace on the tree above:
 
-| Call | left edge | right edge | perfect? | returns |
-|---|---|---|---|---|
-| 1 | 1-2-4 = 3 | 1-3 = 2 | no | `1 + 3 + 2 = 6` |
-| 2 | 2-4 = 2 | 2-5 = 2 | yes | `(1 << 2) - 1 = 3` (4 and 5 never visited) |
-| 3 | 3-6 = 2 | 3 = 1 | no | `1 + 1 + 0 = 2` |
-| 6 | 1 | 1 | yes | `(1 << 1) - 1 = 1` |
-| null | — | — | — | 0 |
+| Removed `tmp` | `x` after | `que` after |
+|---|---|---|
+| 1 | `[1]` | 2 3 |
+| 2 | `[1, 2]` | 3 4 5 |
+| 3 | `[1, 2, 3]` | 4 5 6 |
+| 4 | `[1, 2, 3, 4]` | 5 6 |
+| 5 | `[1, 2, 3, 4, 5]` | 6 |
+| 6 | `[1, 2, 3, 4, 5, 6]` | empty → return **6** |
 
 ### Holes to patch
+
+**Under O(n): skip whole perfect subtrees (the fast version)**
+
+He did not land this one, and it is the one the interviewer is after.
+From a node, walk only the left edge for `l` and only the right edge for `r`.
+Equal lengths mean the subtree is perfect, so return `(1 << l) - 1` without visiting it.
+Different lengths mean return `1 + countNodes(left) + countNodes(right)`.
+In a complete tree one kid is always perfect, so only one side per level goes deep.
+Time is O(log² n): about log n deep calls, each with an edge walk of about log n steps.
+Extra space is O(log n) for the recursion.
+On the tree above, the call at `2` sees edges `2-4` and `2-5`, both length 2, and returns `3` without ever visiting `4` and `5`.
 
 **"+2 if both kids, +1 if one" is still O(n)**
 
@@ -1455,26 +1602,36 @@ Rule: keep an `int count` and increment it on each poll.
 ### Memorize this
 
 1. `null` → `0`.
-2. Walk the left edge for `l`, the right edge for `r`.
-3. Equal → `(1 << l) - 1`, stop.
-4. Else `1 + count(left) + count(right)`.
-5. Say O(log² n): one side per level goes deep, each edge walk is O(log n).
+2. BFS with a queue from the root.
+3. Each removed node: add its value to `x`, offer non-null kids.
+4. Return `x.size()`.
+5. Follow-up: edge heights equal → `(1 << l) - 1`, else `1 + left + right`, O(log² n) (see Holes to patch).
 
 ```java
 public int countNodes(TreeNode root) {
-    if (root == null) return 0;
-    int l = 0, r = 0;
-    for (TreeNode n = root; n != null; n = n.left) l++;
-    for (TreeNode n = root; n != null; n = n.right) r++;
-    if (l == r) return (1 << l) - 1;
-    return 1 + countNodes(root.left) + countNodes(root.right);
+    if (root==null) return 0;
+    Queue<TreeNode> que=new LinkedList<>();
+    ArrayList<Integer> x=new ArrayList<>();
+    que.add(root);
+    while (!que.isEmpty()){
+        TreeNode tmp=que.remove();
+        x.add(tmp.val);
+        if(tmp.left!=null){
+            que.add(tmp.left);
+        }
+        if(tmp.right!=null){
+            que.add(tmp.right);
+        }
+    }
+
+    return x.size();
 }
 ```
 
-Say in the interview: If the left and right edges have the same height the subtree is perfect and has `2^h − 1` nodes, and in a complete tree one child is always perfect, so only one side per level needs real work, which is O(log² n) time.
+Say in the interview: I count every node with a BFS in O(n), and for the follow-up I compare the left-edge and right-edge heights, because equal heights mean a perfect subtree with `2^h − 1` nodes, so only one side per level needs real work, which is O(log² n) time.
 
 ### How it went
 
 On-time with the O(n) BFS; he coded it himself quickly.
 He tried the fast version first but did not land the `2^h − 1` idea after two hints, and asked for it in the notes instead.
-The fast version above is the one to have ready for an interview.
+The fast version under Holes to patch is the one to have ready for an interview.

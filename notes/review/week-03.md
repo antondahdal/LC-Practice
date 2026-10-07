@@ -89,7 +89,7 @@ On `[2,7,11,15]`, target `9`, returning `{left, right}` gives `[0,1]` instead of
 Rule: add one to both indexes on return.
 
 ```java
-return new int[]{left + 1, right + 1};
+return new int[]{left+1,right+1};
 ```
 
 ### Memorize this
@@ -102,14 +102,21 @@ return new int[]{left + 1, right + 1};
 
 ```java
 public int[] twoSum(int[] numbers, int target) {
-    int left = 0, right = numbers.length - 1;
-    while (left < right) {
-        int sum = numbers[left] + numbers[right];
-        if (sum == target) return new int[]{left + 1, right + 1};
-        if (sum < target) left++;
-        else right--;
+    int left=0;
+    int right=numbers.length-1;
+    while(left<right){
+        int sum=numbers[left]+numbers[right];
+        if(sum==target){
+            return new int[]{left+1,right+1};
+        }
+        else if(sum<target){
+            left++;
+        }
+        else{
+            right--;
+        }
     }
-    return new int[]{-1, -1};
+    return new int[]{-1,-1};
 }
 ```
 
@@ -177,8 +184,12 @@ That skipped a real letter without comparing it.
 Rule: one branch per step, so the skips and the compare are one `if / else if / else if / else` chain.
 
 ```java
-if (!Character.isLetterOrDigit(a)) left++;
-else if (!Character.isLetterOrDigit(b)) right--;
+if(!Character.isLetterOrDigit(s.charAt(left))){
+    left++;
+}
+else if(!Character.isLetterOrDigit(s.charAt(right))){
+    right--;
+}
 ```
 
 **Loop condition written backwards**
@@ -211,13 +222,22 @@ Rule: lowercase only the two characters you compare.
 
 ```java
 public boolean isPalindrome(String s) {
-    int left = 0, right = s.length() - 1;
-    while (left < right) {
-        char a = s.charAt(left), b = s.charAt(right);
-        if (!Character.isLetterOrDigit(a)) left++;
-        else if (!Character.isLetterOrDigit(b)) right--;
-        else if (Character.toLowerCase(a) != Character.toLowerCase(b)) return false;
-        else { left++; right--; }
+    int left=0;
+    int right=s.length()-1;
+    while(left<right){
+        if(!Character.isLetterOrDigit(s.charAt(left))){
+            left++;
+        }
+        else if(!Character.isLetterOrDigit(s.charAt(right))){
+            right--;
+        }
+        else if(Character.toLowerCase(s.charAt(left))!=Character.toLowerCase(s.charAt(right))){
+            return false;
+        }
+        else{
+            left++;
+            right--;
+        }
     }
     return true;
 }
@@ -249,9 +269,9 @@ Example: `[0,1,0,3,12]` becomes `[1,3,12,0,0]`.
 Pattern: read/write pointers.
 
 `write` is the next slot for a non-zero value.
-`read` scans every element.
+`i` is the read pointer and scans every element.
 Each non-zero value is copied to `write`, and `write` moves on.
-Because `write` never passes `read`, you only overwrite slots you have already read.
+Because `write` never passes `i`, you only overwrite slots you have already read.
 After the scan, every slot from `write` to the end gets `0`.
 
 Time is O(n) because you scan once and fill the tail once.
@@ -260,12 +280,12 @@ Extra space is O(1) because you work inside the array.
 ### How to solve it
 
 1. `write = 0`.
-2. For each `read`, if `nums[read] != 0`, copy it to `nums[write]` and step `write`.
-3. Fill `nums[write .. n-1]` with `0`.
+2. For each `i`, if `nums[i] != 0`, copy it to `nums[write]` and step `write`.
+3. While `write < nums.length`, put `0` at `nums[write]` and step `write`.
 
 Trace on `[0,1,0,3,12]`:
 
-| read | nums[read] | action | write | array |
+| i | nums[i] | action | write | array |
 |---|---|---|---|---|
 | 0 | 0 | skip | 0 | `[0,1,0,3,12]` |
 | 1 | 1 | copy to 0 | 1 | `[1,1,0,3,12]` |
@@ -290,22 +310,31 @@ Without the fill loop, `[0,1]` becomes `[1,1]` instead of `[1,0]`.
 Rule: the copy pass only moves non-zeros, so the tail must be zeroed explicitly.
 
 ```java
-while (write < nums.length) nums[write++] = 0;
+while(write<nums.length){
+    nums[write]=0;
+    write++;
+}
 ```
 
 ### Memorize this
 
 1. `write = 0`.
-2. Scan; non-zero goes to `nums[write++]`.
-3. Fill the rest with `0`.
+2. `for i`; non-zero goes to `nums[write]`, then `write++`.
+3. `while (write < nums.length)`: put `0`, then `write++`.
 
 ```java
 public void moveZeroes(int[] nums) {
-    int write = 0;
-    for (int x : nums) {
-        if (x != 0) nums[write++] = x;
+    int write=0;
+    for(int i=0;i<nums.length;i++){
+        if(nums[i]!=0){
+            nums[write]=nums[i];
+            write++;
+        }
     }
-    while (write < nums.length) nums[write++] = 0;
+    while(write<nums.length){
+        nums[write]=0;
+        write++;
+    }
 }
 ```
 
@@ -390,8 +419,8 @@ On `[1,2,3,4]`, index 3 becomes `6 * 4 = 24` instead of `6`.
 Rule: multiply `out[i]` by `right`, then update `right`.
 
 ```java
-out[i] *= right;
-right *= nums[i];
+out[i]=out[i]*right;
+right=right*nums[i];
 ```
 
 ### Memorize this
@@ -399,18 +428,20 @@ right *= nums[i];
 1. `out[0] = 1`.
 2. Forward: `out[i] = out[i-1] * nums[i-1]`.
 3. `right = 1`.
-4. Backward: `out[i] *= right`, then `right *= nums[i]`.
+4. Backward: `out[i] = out[i] * right`, then `right = right * nums[i]`.
 
 ```java
 public int[] productExceptSelf(int[] nums) {
-    int n = nums.length;
-    int[] out = new int[n];
-    out[0] = 1;
-    for (int i = 1; i < n; i++) out[i] = out[i - 1] * nums[i - 1];
-    int right = 1;
-    for (int i = n - 1; i >= 0; i--) {
-        out[i] *= right;
-        right *= nums[i];
+    int n=nums.length;
+    int[] out=new int[n];
+    out[0]=1;
+    for(int i=1;i<n;i++){
+        out[i]=out[i-1]*nums[i-1];
+    }
+    int right=1;
+    for(int i=n-1;i>=0;i--){
+        out[i]=out[i]*right;
+        right=right*nums[i];
     }
     return out;
 }
@@ -445,23 +476,23 @@ Pattern: read/write pointers (two pointers, not ends).
 
 Because the array is sorted, a duplicate always sits next to the last unique you kept.
 `write` points at the last unique value you kept.
-`read` scans forward, and each time it sees a value different from `nums[write]`, that value is new.
+`i` is the read pointer and scans forward, and each time it sees a value different from `nums[write]`, that value is new.
 You step `write` and copy it there.
 Neither index ever goes back.
 
-Time is O(n) because `read` visits each element once.
+Time is O(n) because `i` visits each element once.
 Extra space is O(1) because you overwrite the same array.
 
 ### How to solve it
 
 1. If the array is empty, return `0`.
 2. `write = 0` (the first value is always kept).
-3. For `read` from `1` to the end, if `nums[read] != nums[write]`, step `write` and copy.
+3. For `i` from `1` to the end, if `nums[i] != nums[write]`, do `write++`, then copy `nums[i]` to `nums[write]`.
 4. Return `write + 1`.
 
 Trace on `[0,0,1,1,1,2]` (answer `3`, front `[0,1,2]`):
 
-| read | nums[read] | nums[write] | action | write | front so far |
+| i | nums[i] | nums[write] | action | write | front so far |
 |---|---|---|---|---|---|
 | 1 | 0 | 0 | same, skip | 0 | `[0]` |
 | 2 | 1 | 0 | new, `write++`, copy | 1 | `[0,1]` |
@@ -477,7 +508,7 @@ Return `write + 1 = 3`.
 
 The mix-up the notes flag here is the week's big one: for each `i`, send a worker forward to find the next different value, then restart.
 On `[1,1,1,...,1,2]` that re-reads the long run for every `i` and is O(n²).
-Rule: the write pointer only moves forward, and the read pointer only moves forward.
+Rule: `write` only moves forward, and the read pointer `i` only moves forward.
 
 **Reaching for a HashSet**
 
@@ -492,25 +523,28 @@ On `[1,1,2]` you would return `1` instead of `2`.
 Rule: count is last index plus one.
 
 ```java
-return write + 1;
+return write+1;
 ```
 
 ### Memorize this
 
 1. Empty: return 0.
 2. `write = 0`.
-3. `read` from 1.
-4. New value: `++write`, copy.
+3. `i` from 1.
+4. New value: `write++`, then `nums[write] = nums[i]`.
 5. Return `write + 1`.
 
 ```java
 public int removeDuplicates(int[] nums) {
-    if (nums.length == 0) return 0;
-    int write = 0;
-    for (int read = 1; read < nums.length; read++) {
-        if (nums[read] != nums[write]) nums[++write] = nums[read];
+    if(nums.length==0) return 0;
+    int write=0;
+    for(int i=1;i<nums.length;i++){
+        if(nums[i]!=nums[write]){
+            write++;
+            nums[write]=nums[i];
+        }
     }
-    return write + 1;
+    return write+1;
 }
 ```
 
@@ -553,8 +587,8 @@ Extra space is O(1) because you keep two indexes and the best area.
 ### How to solve it
 
 1. `left = 0`, `right = n - 1`, `best = 0`.
-2. While `left < right`, area is `min(height[left], height[right]) * (right - left)`.
-3. Update `best`.
+2. While `left < right`, `h = min(height[left], height[right])` and `area = h * (right - left)`.
+3. If `area > best`, set `best = area`.
 4. Then, as a separate step, move the pointer on the shorter wall inward.
 5. On a tie, move either one.
 
@@ -586,8 +620,15 @@ Tests passed because the next lap moved, but with `>=` instead of `>` it would l
 Rule: compute the area, update `best`, and then always drop the shorter wall, as two separate steps.
 
 ```java
-best = Math.max(best, area);
-if (height[left] < height[right]) left++; else right--;
+if(area>best){
+    best=area;
+}
+if(height[left]<height[right]){
+    left++;
+}
+else{
+    right--;
+}
 ```
 
 **Naming the indexes `min` and `max`**
@@ -599,19 +640,28 @@ Rule: say `left` and `right`.
 ### Memorize this
 
 1. Pointers at both ends.
-2. Area = shorter wall * width.
-3. Keep the max.
-4. Always move the shorter wall inward.
+2. `h` = shorter wall, `area = h * width`.
+3. If `area > best`, keep it.
+4. Separate `if`: always move the shorter wall inward.
 5. Stop when they meet.
 
 ```java
 public int maxArea(int[] height) {
-    int left = 0, right = height.length - 1, best = 0;
-    while (left < right) {
-        int area = Math.min(height[left], height[right]) * (right - left);
-        best = Math.max(best, area);
-        if (height[left] < height[right]) left++;
-        else right--;
+    int left=0;
+    int right=height.length-1;
+    int best=0;
+    while(left<right){
+        int h=Math.min(height[left],height[right]);
+        int area=h*(right-left);
+        if(area>best){
+            best=area;
+        }
+        if(height[left]<height[right]){
+            left++;
+        }
+        else{
+            right--;
+        }
     }
     return best;
 }
@@ -655,9 +705,9 @@ Extra space is O(1) beyond the output list, apart from the sort's O(log n) stack
 1. Sort `nums`.
 2. For each `i`, skip it if `nums[i] == nums[i-1]` (that anchor was already done).
 3. `left = i + 1`, `right = n - 1`.
-4. If the sum is below `0`, `left++`.
-5. If it is above `0`, `right--`.
-6. If it is `0`, record it, move both, then skip repeated values at `left` and at `right`.
+4. If the sum is `0`, record it, move both, then skip repeated values at `left` and at `right`.
+5. Else if it is below `0`, `left++`.
+6. Else `right--`.
 
 Trace on `[-4,0,1,2,3]` (answer `[[-4,1,3]]`, and the pair is not neighbors):
 
@@ -668,7 +718,9 @@ Trace on `[-4,0,1,2,3]` (answer `[[-4,1,3]]`, and the pair is not neighbors):
 | 0 | -4 | 3 | 3 | — | `left == right`, stop | `[[-4,1,3]]` |
 | 1 | 0 | 2 | 4 | 0+1+3 = 4 | too big, `right--` | `[[-4,1,3]]` |
 | 1 | 0 | 2 | 3 | 0+1+2 = 3 | too big, `right--`, then stop | `[[-4,1,3]]` |
-| 2 | 1 | — | — | — | anchor is positive, no triplet can sum to 0, stop | `[[-4,1,3]]` |
+| 2 | 1 | 3 | 4 | 1+2+3 = 6 | too big, `right--`, then stop | `[[-4,1,3]]` |
+| 3 | 2 | 4 | 4 | — | `left == right`, nothing to check | `[[-4,1,3]]` |
+| 4 | 3 | 5 | 4 | — | `left > right`, nothing to check | `[[-4,1,3]]` |
 
 ### Holes to patch
 
@@ -694,7 +746,8 @@ On `[-1,0,1]` the loop never ends.
 Rule: `left` starts at `i + 1`, and the loop is just `while (left < right)`.
 
 ```java
-int left = i + 1, right = nums.length - 1;
+int left=i+1;
+int right=nums.length-1;
 ```
 
 **No duplicate skipping**
@@ -704,34 +757,45 @@ On `[0,0,0,0]` it records `[0,0,0]` twice.
 Rule: skip an anchor equal to the previous anchor, and after a hit skip equal values at `left` and `right`; do not call `contains` on the result list.
 
 ```java
-if (i > 0 && nums[i] == nums[i - 1]) continue;
+if(i>0 && nums[i]==nums[i-1]) continue;
 ```
+
+**Small speed-up he did not use: stop at a positive anchor**
+
+After sorting, once `nums[i] > 0` every value to its right is positive too, so no triplet can sum to `0`.
+His loop still runs those anchors; each one just finds nothing.
+Adding `&& nums[i] <= 0` to the `for` condition stops early without changing the answer or the O(n²) bound.
 
 ### Memorize this
 
 1. Sort.
 2. For each `i`, skip if equal to the previous anchor.
 3. Two pointers on `i+1 .. n-1`.
-4. Sum below zero: `left++`, above: `right--`.
-5. Zero: record, move both, skip equal values.
+4. Sum zero: record, move both, skip equal values.
+5. Else below zero: `left++`, else `right--`.
 
 ```java
 public List<List<Integer>> threeSum(int[] nums) {
+    List<List<Integer>> out=new ArrayList<>();
     Arrays.sort(nums);
-    List<List<Integer>> out = new ArrayList<>();
-    for (int i = 0; i < nums.length - 2 && nums[i] <= 0; i++) {
-        if (i > 0 && nums[i] == nums[i - 1]) continue;
-        int left = i + 1, right = nums.length - 1;
-        while (left < right) {
-            int sum = nums[i] + nums[left] + nums[right];
-            if (sum < 0) left++;
-            else if (sum > 0) right--;
-            else {
-                out.add(List.of(nums[i], nums[left], nums[right]));
+    for(int i=0;i<nums.length;i++){
+        if(i>0 && nums[i]==nums[i-1]) continue;
+        int left=i+1;
+        int right=nums.length-1;
+        while(left<right){
+            int sum=nums[i]+nums[left]+nums[right];
+            if(sum==0){
+                out.add(Arrays.asList(nums[i],nums[left],nums[right]));
                 left++;
                 right--;
-                while (left < right && nums[left] == nums[left - 1]) left++;
-                while (left < right && nums[right] == nums[right + 1]) right--;
+                while(left<right && nums[left]==nums[left-1]) left++;
+                while(left<right && nums[right]==nums[right+1]) right--;
+            }
+            else if(sum<0){
+                left++;
+            }
+            else{
+                right--;
             }
         }
     }
@@ -774,10 +838,11 @@ Extra space is O(1) because you keep two numbers.
 
 ### How to solve it
 
-1. `current = best = nums[0]`.
-2. For `i` from `1`, `current = max(nums[i], current + nums[i])`.
-3. `best = max(best, current)`.
-4. Return `best`.
+1. `current = nums[0]`, `best = nums[0]`.
+2. For `i` from `1`, if `current + nums[i] > nums[i]`, extend: `current = current + nums[i]`.
+3. Otherwise start fresh: `current = nums[i]`.
+4. If `current > best`, set `best = current`.
+5. Return `best`.
 
 Trace on `[-3,-1,-2]` (answer `-1`):
 
@@ -798,7 +863,8 @@ On `[-3,-1,-2]` you return `0`, but the answer is `-1`.
 Rule: seed both with `nums[0]` and loop from index 1.
 
 ```java
-int current = nums[0], best = nums[0];
+int current=nums[0];
+int best=nums[0];
 ```
 
 **Classic trap: resetting to `0` before updating `best`**
@@ -809,16 +875,25 @@ Rule: choose between extending and starting fresh at `nums[i]`, then update `bes
 ### Memorize this
 
 1. Seed `current` and `best` with `nums[0]`.
-2. From index 1: `current = max(x, current + x)`.
-3. `best = max(best, current)`.
-4. Return `best`.
+2. From index 1: if `current + nums[i] > nums[i]`, extend.
+3. Else start fresh at `nums[i]`.
+4. If `current > best`, update `best`.
+5. Return `best`.
 
 ```java
 public int maxSubArray(int[] nums) {
-    int current = nums[0], best = nums[0];
-    for (int i = 1; i < nums.length; i++) {
-        current = Math.max(nums[i], current + nums[i]);
-        best = Math.max(best, current);
+    int current=nums[0];
+    int best=nums[0];
+    for(int i=1;i<nums.length;i++){
+        if(current+nums[i]>nums[i]){
+            current=current+nums[i];
+        }
+        else{
+            current=nums[i];
+        }
+        if(current>best){
+            best=current;
+        }
     }
     return best;
 }
@@ -830,7 +905,7 @@ Say in the interview: I track the best sum of a stretch ending at each index, ex
 
 Done on Week 3 Day 4; the notes record no detail.
 His code seeds both values with `nums[0]`, so the all-negative case is safe.
-He wrote the choice as `if (current + nums[i] > nums[i])`, which is the same as `current > 0`.
+His `if (current + nums[i] > nums[i])` is the same test as `current > 0`, and the one-line form is `current = Math.max(nums[i], current + nums[i])`.
 
 ---
 
@@ -861,20 +936,21 @@ Extra space is O(1) because you write into `nums1` directly.
 ### How to solve it
 
 1. `i = m - 1` (tail of `nums1` data), `j = n - 1` (tail of `nums2`), `k = m + n - 1` (write slot).
-2. While `j >= 0`:
-3. If `i >= 0` and `nums1[i] > nums2[j]`, put `nums1[i]` at `k` and step `i`.
+2. While `i >= 0` and `j >= 0`:
+3. If `nums1[i] > nums2[j]`, put `nums1[i]` at `k` and step `i`.
 4. Otherwise put `nums2[j]` at `k` and step `j`.
 5. Step `k`.
-6. When `j` runs out, the rest of `nums1` is already in place.
+6. Leftover loop: while `j >= 0`, put `nums2[j]` at `k`, step `j` and `k`.
+7. No leftover loop for `nums1`; its rest is already in place.
 
 Trace on `nums1 = [4,5,0,0]`, `m = 2`, `nums2 = [1,2]`, `n = 2` (answer `[1,2,4,5]`):
 
-| i | j | k | compare | write | nums1 |
-|---|---|---|---|---|---|
-| 1 | 1 | 3 | 5 > 2 | `nums1[3] = 5` | `[4,5,0,5]` |
-| 0 | 1 | 2 | 4 > 2 | `nums1[2] = 4` | `[4,5,4,5]` |
-| -1 | 1 | 1 | `nums1` empty | `nums1[1] = 2` | `[4,2,4,5]` |
-| -1 | 0 | 0 | `nums1` empty | `nums1[0] = 1` | `[1,2,4,5]` |
+| loop | i | j | k | compare | write | nums1 |
+|---|---|---|---|---|---|---|
+| main | 1 | 1 | 3 | 5 > 2 | `nums1[3] = 5` | `[4,5,0,5]` |
+| main | 0 | 1 | 2 | 4 > 2 | `nums1[2] = 4` | `[4,5,4,5]` |
+| leftover | -1 | 1 | 1 | `i` ran out | `nums1[1] = 2` | `[4,2,4,5]` |
+| leftover | -1 | 0 | 0 | `i` ran out | `nums1[0] = 1` | `[1,2,4,5]` |
 
 This input shows the leftover case: `nums1` runs out first, and `nums2` still has values to copy.
 
@@ -886,11 +962,17 @@ The notes only record that this was done on Thursday, so these are the classic t
 
 A loop of `while (i >= 0 && j >= 0)` alone leaves values of `nums2` unplaced.
 On the trace input it stops with `[4,5,4,5]` instead of `[1,2,4,5]`.
-Rule: loop until `nums2` is empty; leftovers of `nums1` are already in place.
+Rule: after the main loop, copy what is left of `nums2`; leftovers of `nums1` are already in place.
 
 ```java
-while (j >= 0) nums1[k--] = nums2[j--];
+while(j>=0){
+    nums1[k]=nums2[j];
+    j--;
+    k--;
+}
 ```
+
+A shorter equivalent is one loop `while (j >= 0)` with the guard `i >= 0 && nums1[i] > nums2[j]` inside.
 
 **Classic trap: merging from the front**
 
@@ -901,16 +983,31 @@ Rule: fill from the back, where the slots are empty.
 ### Memorize this
 
 1. `i` at end of `nums1` data, `j` at end of `nums2`, `k` at the very end.
-2. While `j >= 0`, bigger tail goes to `k`.
-3. Guard `i >= 0` before reading `nums1[i]`.
-4. Leftover `nums1` stays where it is.
+2. While both `i >= 0` and `j >= 0`, bigger tail goes to `k`.
+3. Step `k` every lap.
+4. Leftover loop: copy the rest of `nums2`.
+5. Leftover `nums1` stays where it is.
 
 ```java
 public void merge(int[] nums1, int m, int[] nums2, int n) {
-    int i = m - 1, j = n - 1, k = m + n - 1;
-    while (j >= 0) {
-        if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];
-        else nums1[k--] = nums2[j--];
+    int i=m-1;
+    int j=n-1;
+    int k=m+n-1;
+    while(i>=0 && j>=0){
+        if(nums1[i]>nums2[j]){
+            nums1[k]=nums1[i];
+            i--;
+        }
+        else{
+            nums1[k]=nums2[j];
+            j--;
+        }
+        k--;
+    }
+    while(j>=0){
+        nums1[k]=nums2[j];
+        j--;
+        k--;
     }
 }
 ```
@@ -921,7 +1018,7 @@ Say in the interview: I fill `nums1` from the back with the larger of the two ta
 
 Done on Week 3 Day 4; the notes record no detail.
 His code has a main loop while both sides have values, then a leftover loop for `nums2`.
-That is correct and equivalent to the single loop above.
+That is correct, and it has no leftover loop for `nums1`, which is right.
 
 ---
 
@@ -948,25 +1045,28 @@ If that character is already in the window, `left` walks forward, removing chara
 Then the new character goes in.
 The set only describes what sits between `left` and `right`; `left` itself is an index on the string, not something stored in the set.
 
-Time is O(n) because each index enters the window once and leaves at most once.
+Time is O(n) because each lap moves either `left` or `right` forward, so there are at most 2n laps.
 Extra space is O(min(n, alphabet)) because the set holds at most one copy of each distinct character.
 
 ### How to solve it
 
-1. `left = 0`, `best = 0`, empty set.
-2. For each `right`, let `c = s[right]`.
-3. While `c` is in the set, remove `s[left]` and step `left`.
-4. Add `c`.
-5. `best = max(best, right - left + 1)`.
+1. `left = 0`, `right = 0`, `best = 0`, empty set.
+2. While `right < s.length()`, do exactly one thing per lap.
+3. If `s[right]` is in the set, remove `s[left]` and step `left` (`right` stays).
+4. Else add `s[right]`, step `right`, and if `set.size() > best`, set `best = set.size()`.
+5. Return `best`.
+
+The set always holds exactly the window `left .. right-1`, so `set.size()` is the window length.
 
 Trace on `"dvdf"` (answer `3`):
 
-| right | c | peel from left | left | window | best |
+| left | right | s[right] | branch | set after | best |
 |---|---|---|---|---|---|
-| 0 | d | — | 0 | `d` | 1 |
-| 1 | v | — | 0 | `dv` | 2 |
-| 2 | d | remove `d`, `left++` | 1 | `vd` | 2 |
-| 3 | f | — | 1 | `vdf` | 3 |
+| 0 | 0 | d | not in set, add, `right++` | `{d}` | 1 |
+| 0 | 1 | v | not in set, add, `right++` | `{d,v}` | 2 |
+| 0 | 2 | d | in set, remove `s[0] = d`, `left++` | `{v}` | 2 |
+| 1 | 2 | d | not in set, add, `right++` | `{v,d}` | 2 |
+| 1 | 3 | f | not in set, add, `right++` | `{v,d,f}` | 3 |
 
 At `right = 2`, only the first `d` leaves; the `v` stays, and that is what makes `"vdf"` possible.
 
@@ -1002,24 +1102,30 @@ Rule: the set holds characters, `left` and `right` hold positions.
 
 ### Memorize this
 
-1. Outer `for right` grows the window.
-2. Inner `while` peels `left` while `s[right]` is already inside.
-3. Add `s[right]`.
-4. `best = max(best, right - left + 1)`.
+1. `left = 0`, `right = 0`, one `while (right < s.length())`.
+2. `s[right]` already in the set: remove `s[left]`, `left++`.
+3. Else: add `s[right]`, `right++`.
+4. After an add, `best` = bigger of `best` and `set.size()`.
 5. Never reset the set.
 
 ```java
 public int lengthOfLongestSubstring(String s) {
-    Set<Character> window = new HashSet<>();
-    int left = 0, best = 0;
-    for (int right = 0; right < s.length(); right++) {
-        char c = s.charAt(right);
-        while (window.contains(c)) {
-            window.remove(s.charAt(left));
+    Set<Character> set=new HashSet<>();
+    int left=0;
+    int right=0;
+    int best=0;
+    while(right<s.length()){
+        if(set.contains(s.charAt(right))){
+            set.remove(s.charAt(left));
             left++;
         }
-        window.add(c);
-        best = Math.max(best, right - left + 1);
+        else{
+            set.add(s.charAt(right));
+            right++;
+            if(set.size()>best){
+                best=set.size();
+            }
+        }
     }
     return best;
 }
@@ -1031,7 +1137,8 @@ Say in the interview: I grow `right`, and when the new character is already in t
 
 Passed on Week 3 Day 5.
 The hard part was the gate: reset-the-set thinking and "keep the `d`, drop the `v`" both had to go before the window made sense.
-His code uses one `while` loop with an `if / else` (peel on repeat, else add and move `right`), which is the same as the inner `while` above.
+His code uses one `while` loop with an `if / else` (peel on repeat, else add and move `right`), and reads the window length from `set.size()`.
+The textbook shape is an outer `for right` with an inner peel `while` and `right - left + 1`; it does the same steps.
 Cousin: a map from character to last index lets `left` jump instead of peel, but then it must never move backward (`"abba"`).
 
 ---
@@ -1060,10 +1167,12 @@ Extra space is O(n · k) because the map stores every word and every key.
 
 ### How to solve it
 
-1. Empty map from `String` to `List<String>`.
-2. For each word, sort its characters and turn them back into a `String` key.
-3. Append the word to the list for that key, creating the list if needed.
-4. Return the map's values as a list.
+1. Null or empty input returns `List.of()`.
+2. Empty map from `String` to `List<String>`.
+3. For each word, sort its characters and turn them back into a `String` key with `String.valueOf(arr)`.
+4. If the map has no list for that key, put a new `ArrayList`.
+5. Append the word to the list for that key.
+6. Return the map's values as a list.
 
 Trace on `["eat","tea","tan","ate"]`:
 
@@ -1083,7 +1192,7 @@ The tests did not hit it, but a caller that loops over the result gets a `NullPo
 Rule: an empty input returns an empty list.
 
 ```java
-if (strs == null || strs.length == 0) return List.of();
+if(strs==null || strs.length==0) return List.of();
 ```
 
 **Classic trap: using the `char[]` itself as the key**
@@ -1094,7 +1203,7 @@ The sorted arrays from `"eat"` and `"tea"` are different keys, so every word lan
 Rule: turn the sorted array into a real `String`.
 
 ```java
-String key = String.valueOf(arr);
+String key=String.valueOf(arr);
 ```
 
 **Classic trap: sorting the list of words instead of each word**
@@ -1104,20 +1213,26 @@ Rule: sort the letters inside each word to build its key.
 
 ### Memorize this
 
-1. Map of key to list.
-2. Key = sorted letters as a `String`.
-3. `computeIfAbsent(key, k -> new ArrayList<>()).add(word)`.
-4. Return `new ArrayList<>(map.values())`.
+1. Null or empty: `List.of()`.
+2. Map of key to list.
+3. Key = sorted letters as a `String` (`String.valueOf(arr)`).
+4. No list for the key yet: `put` a new one; then `get(key).add(word)`.
+5. Return `new ArrayList<>(map.values())`.
 
 ```java
 public List<List<String>> groupAnagrams(String[] strs) {
-    Map<String, List<String>> groups = new HashMap<>();
-    for (String s : strs) {
-        char[] c = s.toCharArray();
-        Arrays.sort(c);
-        groups.computeIfAbsent(new String(c), k -> new ArrayList<>()).add(s);
+    if(strs==null || strs.length==0) return List.of();
+    Map<String,List<String>> map=new HashMap<>();
+    for(int i=0;i<strs.length;i++){
+        char[] arr=strs[i].toCharArray();
+        Arrays.sort(arr);
+        String key=String.valueOf(arr);
+        if(!map.containsKey(key)){
+            map.put(key,new ArrayList<>());
+        }
+        map.get(key).add(strs[i]);
     }
-    return new ArrayList<>(groups.values());
+    return new ArrayList<>(map.values());
 }
 ```
 
@@ -1127,4 +1242,5 @@ Say in the interview: I sort each word into a signature key and append the origi
 
 Passed on Week 3 Day 5, the last LC of the week.
 The only code slip was `null` for empty input, which is now `List.of()`.
-His code uses `String.valueOf(arr)` as the key and `containsKey` then `put` in place of `computeIfAbsent`.
+His code uses `String.valueOf(arr)` as the key and `containsKey` then `put`.
+The one-line equivalent is `map.computeIfAbsent(key, k -> new ArrayList<>()).add(strs[i])`.
