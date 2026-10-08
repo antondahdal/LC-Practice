@@ -71,15 +71,35 @@ On a hash ring only the dead node's keys move to its neighbour, so the DB sees a
 Still mixes up which scheme moves only the dead node's keys.
 Forgot Book unless asked.
 
+## LC 322 Coin Change — coach-written (Thu 2026-10-08, carry)
+
+Full write-up: `notes/review/week-08.md`.
+
+Key idea: `retarr[a]` is the fewest coins that make `a`, filled from 0 up, each cell one coin plus a smaller amount.
+
+**Holes:**
+Named DP bottom-up, then asked if it was the stairs structure.
+Sized the array by `coins.length` first.
+Early return treated one coin used once: `[1]` and amount `2` is `2`, not `-1`.
+Called time O(n). It is O(amount × coins.length).
+
+**How it went:**
+Stayed on it and asked for the code.
+Coach wrote it in his `retarr` shape, 5 of 5.
+Design recap skipped so he can finish Part 2.
+Ch 11 token bucket is still open.
+
 ## Coaching notes
 
 Two sessions in a row he did not know the pattern and chose to learn.
 The swap-or-learn offer still works; keep offering it once, without hints.
 On DP, point him back to "what are my choices at `i`" when he reviews, not to the number pattern.
+On Coin Change the choice at amount `a` is which coin to add to `a - coin`.
 
 ## Calendar
 
 Day 4 Part 1 closed (#198 coach-written, #146 coach-written, Ch 10 consistent hashing recap).
-#322 Coin Change carried.
-Next design recap if a slot is left: Ch 11 token bucket.
-Not pushed; push after Part 3 when Anton says.
+#322 Coin Change closed Thu 2026-10-08, coach-written.
+Week 8 bank is done.
+Design recap still open: Ch 11 token bucket.
+Pushed with Part 3 on 2026-10-08.

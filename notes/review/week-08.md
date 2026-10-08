@@ -10,6 +10,7 @@ It also has one design problem, LRU Cache.
 | 207 | Course Schedule | Graph (topological sort, Kahn's BFS) | O(V + E) / O(V + E) | coach-written, untimed |
 | 198 | House Robber | DP (skip or take) | O(n) / O(n) table (O(1) with two variables) | coach-written, untimed |
 | 146 | LRU Cache | Design: HashMap + doubly linked list | O(1) per call / O(capacity) | coach-written, untimed |
+| 322 | Coin Change | DP (fewest coins for each amount) | O(amount × coins) / O(amount) | coach-written |
 
 How to tell them apart:
 
@@ -18,6 +19,7 @@ How to tell them apart:
 | A grid of cells, "connected", "islands", "regions" | Graph walk (DFS or BFS), mark visited |
 | "A before B", "prerequisites", "can you finish / order" | Graph, topological sort (loop = impossible) |
 | "How many ways", "best total", and step n depends on smaller steps | DP |
+| "Fewest coins", unlimited use of each coin, make an amount | DP, one cell per amount |
 | "Cache", "evict the oldest / least recently used", O(1) per call | HashMap for lookup + doubly linked list for order |
 
 ---
@@ -584,3 +586,108 @@ Cousin: #460 LFU Cache (evict the least frequently used; Hard).
 Had the HashMap for lookup; tried a Stack, then a PriorityQueue, for the order.
 Chose to learn instead of swapping; coach explained with the picture and wrote it.
 Coach-written, 5 of 5, untimed.
+
+---
+
+## LC 322 Coin Change — coach-written
+
+https://leetcode.com/problems/coin-change/
+
+### The problem
+
+You get coin values and a target amount.
+You may use each coin any number of times.
+Return the fewest coins that add up to the amount.
+If you cannot make it, return `-1`.
+
+Coins `1`, `2`, and `5`, amount `11`, is `3` (`5 + 5 + 1`).
+Coins `[2]`, amount `3`, is `-1`.
+Amount `0` is `0`.
+
+### The idea
+
+Pattern: DP, bottom-up.
+`retarr[a]` is the fewest coins that make amount `a`.
+You fill from `0` up to the target.
+To make `a`, take one coin and add it to a smaller amount you already solved: `retarr[a - coin] + 1`, and keep the smaller candidate.
+Time is O(amount × coins.length): every amount tries every coin.
+Extra space is O(amount) for the table.
+There is no closed formula.
+
+### How to solve it
+
+1. Array of length `amount + 1`.
+2. Index `0` is `0`.
+3. Every other index starts at `amount + 1`, meaning impossible.
+4. For each amount `a` from `1` to the target, for each coin that fits, if `a - coin` is possible, keep the min of the current cell and `retarr[a - coin] + 1`.
+5. If the target cell is still above `amount`, return `-1`.
+6. Otherwise return that cell.
+
+| a | fewest | one way |
+|---|---|---|
+| 0 | 0 | nothing |
+| 1 | 1 | 1 |
+| 2 | 1 | 2 |
+| 3 | 2 | 2+1 |
+| 5 | 1 | 5 |
+| 6 | 2 | 5+1 |
+| 11 | 3 | 5+5+1 |
+
+### Holes to patch
+
+**No formula.**
+He asked if a math puzzle had to be solved first.
+The only math is the smaller cell plus one.
+
+**Not the stairs step.**
+Stairs only reads one back and two back.
+Here the index is the amount, and the step back is a coin value.
+Coin `5` at amount `11` reads `retarr[6]`.
+
+**The array is sized by the amount.**
+He first made it `coins.length + 1`.
+On `[1, 2, 5]` that is four slots, and there is no cell for `11`.
+Rule: length `amount + 1`, because the index is the amount.
+
+**One coin can be used more than once.**
+His early return said: if the only coin is not equal to the amount, return `-1`.
+Coins `[1]`, amount `2`, is `1 + 1`, so `2`, not `-1`.
+
+**Time is not O(n).**
+Each amount tries every coin.
+O(amount × coins.length) time, O(amount) space.
+
+### Memorize this
+
+1. Array length `amount + 1`. Cell `a` is the fewest coins that make `a`.
+2. Cell `0` is `0`. Other cells start at `amount + 1`.
+3. For each `a`, for each coin that fits, candidate is `cell[a - coin] + 1`. Keep the smaller.
+4. Target still impossible → `-1`, else return the target cell.
+
+```java
+public int coinChange(int[] coins, int amount) {
+    int[] retarr = new int[amount + 1];
+    for (int a = 1; a <= amount; a++) {
+        retarr[a] = amount + 1;
+        for (int i = 0; i < coins.length; i++) {
+            int coin = coins[i];
+            if (coin <= a && retarr[a - coin] <= amount) {
+                retarr[a] = Math.min(retarr[a], retarr[a - coin] + 1);
+            }
+        }
+    }
+    if (retarr[amount] > amount) return -1;
+    return retarr[amount];
+}
+```
+
+Say in the interview: I keep the fewest coins for every amount from 0 up to the target, and each amount is one coin plus a smaller amount I already solved, so it is one pass of amounts times coins.
+
+Cousin: #518 Coin Change II, which counts the ways, not the fewest coins.
+
+### How it went
+
+Named DP bottom-up.
+The why stayed vague, and he compared it to Climbing Stairs.
+Stayed on the problem and asked for the code.
+Coach wrote it in his `retarr` shape, 5 of 5.
