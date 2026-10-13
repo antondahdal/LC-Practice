@@ -22,7 +22,8 @@ public class SearchRotatedSortedArray {
         int mid = low + (high - low) / 2;
             if(nums[mid]==target) return mid;
             if (nums[low] <= nums[mid]) {
-                if (target >= nums[low] && target < nums[mid]) high = mid - 1;
+                if (
+                    target >= nums[low] && target < nums[mid]) high = mid - 1;
                 else low = mid + 1;
             } else {
                 if (target > nums[mid] && target <= nums[high]) low = mid + 1;

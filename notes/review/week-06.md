@@ -1544,7 +1544,8 @@ Answer: `6`.
 
 ### The idea
 
-His version: BFS over the whole tree, collecting every value, and the list size is the count.
+Pattern: BFS, count every node.
+His version walks the whole tree, collecting every value, and the list size is the count.
 That is O(n) time because every node is removed once.
 Extra space is O(n) for the queue plus the list `x` of values.
 

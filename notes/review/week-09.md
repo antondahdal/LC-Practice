@@ -40,7 +40,7 @@ cd ce cf
 
 ### The idea
 
-Backtracking.
+Pattern: backtracking.
 You keep one partial string, one letter chosen for each digit so far.
 When the partial string is as long as `digits`, it is one answer.
 Then you drop the last letter and try the next letter on that same key.
@@ -169,7 +169,7 @@ Level 2 is 11.
 
 ### The idea
 
-BFS.
+Pattern: BFS, the queue size is one level.
 At the start of a level the queue holds exactly that level.
 Take that many nodes, sum them, and divide by the count.
 Children go to the back, so they are the next level.
