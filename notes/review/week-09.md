@@ -9,6 +9,8 @@ Monday's Easy is the Week 6 leftover, a level-order walk.
 | 637 | Average of Levels in Binary Tree | BFS | O(n) / O(n) | on-time |
 | 22 | Generate Parentheses | Backtracking | Catalan count, copy each string / O(n) besides the output | coach-written, untimed |
 | 108 | Convert Sorted Array to BST | Middle of a sorted slice becomes the root | O(n) / O(log n) | coach-written, untimed |
+| 46 | Permutations | Backtracking | O(n · n!) / O(n) besides the output | coach-written, untimed |
+| 392 | Is Subsequence | Two pointers | O(n) / O(1) | on-time |
 
 How to tell them apart:
 
@@ -18,6 +20,8 @@ How to tell them apart:
 | "Average / list of each row of a tree" | BFS, the queue size is the row |
 | "Every valid way to place n pairs" | Backtracking, add `(` while opens are under n, add `)` only while closes are under opens |
 | "Sorted array into a short BST" | Middle value of the current slice is the root, then the same split on each side |
+| "Every ordering of distinct numbers" | Backtracking, one unused number per slot, then undo |
+| "Is s a subsequence of t" | Two pointers, match moves s, every step moves t |
 
 ---
 
@@ -464,3 +468,259 @@ private TreeNode build(int[] nums, int left, int right) {
 ```
 
 Say in the interview: the array is already sorted, so the middle value is the root and the same split on each side keeps the tree short.
+
+---
+
+## LC 46 Permutations — coach-written, untimed
+
+https://leetcode.com/problems/permutations/
+
+### The problem
+
+`nums` holds distinct integers.
+Return every ordering of those numbers.
+Order of the lists does not matter.
+
+```
+[1, 2, 3]
+
+1 2 3
+1 3 2
+2 1 3
+2 3 1
+3 1 2
+3 2 1
+```
+
+### The idea
+
+Pattern: backtracking.
+You keep one partial list, plus which indexes are already used.
+Each unused number is a legal pick for the next slot.
+When the partial list is as long as `nums`, save a copy.
+Then drop the last number and unmark it so the next number can take that slot.
+Time is O(n · n!): there are n! orderings, and copying each one costs n.
+Extra space is O(n) for the partial list, the used marks, and the call stack.
+The list of answers is the output.
+
+### How to solve it
+
+1. Start with an empty partial list and a `used` mark per index.
+2. If the partial list is as long as `nums`, save a copy and return.
+3. For each index that is not used, mark it, add `nums[i]`, recurse.
+4. Then remove the last number and unmark that index.
+5. Every unused index is tried at this slot.
+
+Trace on `[1, 2]`:
+
+| partial | used | next pick | what happens |
+|---|---|---|---|
+| (empty) | F F | 1 | add 1 |
+| 1 | T F | 2 | add 2, save `[1, 2]`, drop 2 |
+| 1 | T F | (none left) | drop 1 |
+| (empty) | F F | 2 | add 2 |
+| 2 | F T | 1 | add 1, save `[2, 1]` |
+
+### Holes to patch
+
+**Time is not O(n²).**
+
+n! lists come back, and each copy walks n numbers.
+Say O(n · n!) time, O(n) extra space besides the output.
+
+**Save a copy, not the same list.**
+
+If you `add(partial)` without copying, later undo empties every answer already stored.
+`answers.add(new ArrayList<>(partial))`.
+
+### How it went
+
+Untimed.
+The method was written to restudy.
+The undo is the same drop as Letter Combinations and Generate Parentheses.
+
+### Memorize this
+
+1. Keep one partial list and a used mark per index.
+2. When the partial list is as long as `nums`, save a copy.
+3. For each unused index, add that number, recurse, then undo.
+4. Undo means drop the last number and unmark the index.
+5. Values are distinct, so you do not skip duplicates.
+
+```java
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> answers = new ArrayList<>();
+    build(answers, new ArrayList<>(), new boolean[nums.length], nums);
+    return answers;
+}
+
+private void build(List<List<Integer>> answers, List<Integer> partial, boolean[] used, int[] nums) {
+    if (partial.size() == nums.length) {
+        answers.add(new ArrayList<>(partial));
+        return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+        if (used[i]) {
+            continue;
+        }
+        used[i] = true;
+        partial.add(nums[i]);
+        build(answers, partial, used, nums);
+        partial.remove(partial.size() - 1);
+        used[i] = false;
+    }
+}
+```
+
+Say in the interview: I fill one slot at a time from the numbers that are not used yet, then I undo so the next number can take that same slot.
+
+---
+
+## LC 392 Is Subsequence — on-time
+
+https://leetcode.com/problems/is-subsequence/
+
+### The problem
+
+`s` and `t` are strings.
+Return true if you can read `s` by walking `t` left to right and picking letters in order.
+They do not have to sit next to each other.
+
+```
+s:  a   b     c
+t:  a h b g d c     → true
+
+s:  a   x     c
+t:  a h b g d c     → false
+```
+
+### The idea
+
+Pattern: two pointers.
+One index on `s`, one index on `t`.
+Walk `t` left to right.
+A match moves the `s` index forward.
+Every step moves the `t` index forward.
+If the `s` index reaches `s.length()`, every letter was found in order.
+Time is O(n) on the length of `t`.
+Extra space is O(1).
+
+### How to solve it
+
+1. Empty `s` is true.
+2. Start both indexes at 0.
+3. While `t` still has letters, if they match, move `s` forward.
+4. Always move `t` forward.
+5. After a match, if `s` is fully consumed, return true.
+6. If `t` runs out first, return false.
+
+Trace on `s = "abc"`, `t = "ahbgdc"`:
+
+| t letter | s index | match? | s index after |
+|---|---|---|---|
+| a | 0 (a) | yes | 1 |
+| h | 1 (b) | no | 1 |
+| b | 1 (b) | yes | 2 |
+| g | 2 (c) | no | 2 |
+| d | 2 (c) | no | 2 |
+| c | 2 (c) | yes | 3, true |
+
+### Holes to patch
+
+**True on the last slot before that letter matches.**
+
+`sInd == s.length() - 1` returns true while the last letter of `s` is still unmatched.
+`s = "a"`, `t = "b"` comes back true.
+`s = "a"`, `t = "bc"` does the same if that check sits at the top of the loop.
+Return true only after a match makes `sInd == s.length()`.
+
+```java
+if (sInd == s.length()) return true;
+```
+
+**A length-1 special case is not the rule.**
+
+`s.length() == 1 && t.length() == 1` only patches that one pair.
+The same early return still lies on a longer `t`.
+One check after the match.
+Not a pile of length filters.
+
+**Green tests can miss this.**
+
+`abc` in `ahbgdc` goes green even with the hole.
+Keep `s = "a"`, `t = "b"` in the suite.
+
+### How it went
+
+On-time.
+The early return was the hole.
+After the check moved to `sInd == s.length()` after a match, it was right.
+
+### Memorize this
+
+1. Empty `s` is true.
+2. One index on `s`, one on `t`.
+3. Match moves `s`. Every step moves `t`.
+4. After a match, `sInd == s.length()` means true.
+5. `t` running out first means false.
+
+```java
+public boolean isSubsequence(String s, String t) {
+    int sInd = 0;
+    int tInd = 0;
+    if (s.length() == 0) {
+        return true;
+    }
+    while (tInd < t.length()) {
+        if (s.charAt(sInd) == t.charAt(tInd)) {
+            sInd++;
+        }
+        tInd++;
+        if (sInd == s.length()) {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+Say in the interview: I walk `t` once and advance in `s` only on a match, so I am done when `s` is fully consumed.
+
+---
+
+## S3 — Proxies and AOP
+
+`writeBook()` has `@Transactional`.
+
+The controller call `bookingService.writeBook()` hits Spring's wrapper first.
+The wrapper opens the transaction, then calls the real method.
+
+`book()` calling `writeBook()` on the same object is `this`.
+Spring never sees it.
+No transaction.
+
+`@Transactional` on a `private` method is the same miss.
+
+Say in the interview: `@Transactional` runs only when the call goes through Spring's proxy, not through `this`.
+
+---
+
+## S4 — Bean scopes, lifecycle, circular dependencies
+
+`@Service` is a singleton.
+One `BookingService` for the whole app.
+Not a new bean each time something injects it.
+
+Order: `new`, inject constructor args, `@PostConstruct`, then it can take calls.
+
+If `A` constructor-injects `B` and `B` constructor-injects `A`, neither can finish.
+Startup fails.
+
+Field injection can hide that loop until a request hits it.
+Constructor injection blows up at boot.
+
+Prototype is a new instance per lookup.
+Do not use that for the service that writes tickets.
+
+Say in the interview: `BookingService` is a singleton.
+A constructor loop between two beans fails startup.

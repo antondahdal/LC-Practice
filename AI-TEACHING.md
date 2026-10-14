@@ -34,7 +34,7 @@ Read first: `interview-notes/part1-map.md`, `lc-patterns.md`, `lc-sd-map.md`, cu
 
 ## What a weekday looks like
 
-1. **Part 1 coding** (this repo): Medium, then Easy. Top Interview 150 only.
+1. **Part 1 coding** (this repo): through Week 9 Day 3, Medium then Easy. **From Week 9 Day 4 (Anton 2026-10-14):** one old LC, then one new LC, same pattern. Top Interview 150 only.
 2. **Part 1 LC-SD** (Mon–Thu): ~15 min talk from `lc-sd-map.md`. Friday = coding only.
 3. **Part 2 / Part 3**: Spring + OOP on the Booking app — **not here**.
 4. Sat/Sun **off**. Stay on the **current week**. Do not jump the map.
@@ -43,7 +43,9 @@ Weeks 3–5: **two** LCs per weekday. Weeks 6–8: **three**.
 
 Week 9 (Anton 2026-09-25): **two** LCs. Mon–Thu, the LC-SD slot becomes **~20 min, two Spring Boot questions** from the `week-09.md` bank (S1–S8). Same run: topic, why, short explain, he talks first, trap + one sentence. Friday after coding: **~15 min rapid-fire** (R1–R8), so the whole bank is covered.
 
-If he skips a problem, pick another Top Interview 150 from **that same week's bank**.
+**From Week 9 Day 4 (Anton 2026-10-14):** the two LCs are **one old, then one new, same pattern**, so the Part 1 families get restudied. Old = already closed, coded again from a fresh stub in the current week folder (do not overwrite last week's file). New = unused Top Interview 150 of that family. Cycle families. No fourth day of the same family. No new backtracking (#39 stays dropped). Same gate and timer on both.
+
+If he skips a problem, pick another Top Interview 150 from **that same pattern**.
 
 ## Layout
 
@@ -77,7 +79,7 @@ Run from **repo root**:
 Wrong name → bounce (example: sliding window on “nth from end of list” is a **gap of n** between two walkers). Do not hand the memorize line until the name matches.
 
 No indirect hints either (Anton 2026-10-02): no "each step must halve", no "compare `mid` with `mid + 1`", no family names in option lists before he names it.
-If he does not know the why, do not explain the key rule mid-gate; offer to swap the problem. If he says no and asks to learn it (Anton 2026-10-05), explain with a picture + Memorize steps, write the code if he asks, and mark it coach-written, untimed.
+If he does not know the why, stay on the problem. Explain the picture. Do not name the pattern. **Never offer to swap unless he asks** (Anton 2026-10-14). If he asks to learn it (Anton 2026-10-05), explain with a picture + Memorize steps, write the code if he asks, and mark it coach-written, untimed.
 Put a small picture (number line or table) of the example in the Cover.
 Do not run the same family a fourth day in a row; rotate within the week's bank.
 
@@ -124,7 +126,7 @@ When that day's Part 1 is closed:
 1. Leave **his** solutions and tests in place.
 2. Sync this file + `.cursor/rules/lc-session.mdc` if the protocol changed.
 3. Extra weak spots / skips **not** already in the notes repo → `notes/` here.
-4. LC notes **teach, they do not log** (Anton 2026-09-30). Per LC: the problem, the idea (why it works, time / space), steps in words with a small trace, **holes to patch** (wrong thinking, an input where it breaks, the right rule), then three or four lines on how it went. No minute stamps, no "coach asked / he said" chains. Also add the LC to the weekly review sheet `notes/review/week-NN.md` with a **Memorize this** block (steps + one reference Java solution). Each sentence that ends with `.` is a new line. See `.cursor/rules/lc-notes.mdc`.
+4. LC notes **teach, they do not log** (Anton 2026-09-30). **Human restudy voice** (Anton 2026-10-14): write like a person leaving notes for himself the night before an interview, not a session report. You / the method / the trap. No "coach asked" / "he said" inside the teaching sections. Per LC: the problem, the idea (why it works, time / space), steps in words with a small trace, **holes to patch** (wrong thinking, an input where it breaks, the right rule), then three or four lines on how it went. Also add the LC to the weekly review sheet `notes/review/week-NN.md` with a **Memorize this** block (steps + one reference Java solution). Each sentence that ends with `.` is a new line. See `.cursor/rules/lc-notes.mdc`.
 5. **Do not push.** He will ask to push after **Part 3**, together with the notes.
 
 Remote: `https://github.com/antondahdal/LC-Practice.git`

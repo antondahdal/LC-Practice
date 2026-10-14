@@ -5,6 +5,14 @@ alwaysApply: true
 
 # Notes — explain, do not log
 
+## Human restudy voice (Anton 2026-10-14)
+
+Notes are for restudy the night before an interview.
+Write them like a person leaving notes for himself, not like a session report and not like a protocol file.
+Use you / the method / the trap.
+Do not put "coach asked", "he said", "Anton 2026-10-14", or a calendar dump inside The idea, Holes, Memorize, or a Spring restudy section.
+Dates and process live only in the calendar block at the top of a day file, or in `.cursor/rules/`.
+
 ## LC notes teach, they do not replay the session (Anton 2026-09-30)
 
 Anton reads the notes to understand the problem better and to patch his holes.
