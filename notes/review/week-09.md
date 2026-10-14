@@ -7,6 +7,8 @@ Monday's Easy is the Week 6 leftover, a level-order walk.
 |---|---|---|---|---|
 | 17 | Letter Combinations of a Phone Number | Backtracking | O(4^n · n) / O(n) besides the output | overtime, coach patched |
 | 637 | Average of Levels in Binary Tree | BFS | O(n) / O(n) | on-time |
+| 22 | Generate Parentheses | Backtracking | Catalan count, copy each string / O(n) besides the output | coach-written, untimed |
+| 108 | Convert Sorted Array to BST | Middle of a sorted slice becomes the root | O(n) / O(log n) | coach-written, untimed |
 
 How to tell them apart:
 
@@ -14,6 +16,8 @@ How to tell them apart:
 |---|---|
 | "Every string these digits can spell", length is not fixed | Backtracking, one letter per digit, then undo |
 | "Average / list of each row of a tree" | BFS, the queue size is the row |
+| "Every valid way to place n pairs" | Backtracking, add `(` while opens are under n, add `)` only while closes are under opens |
+| "Sorted array into a short BST" | Middle value of the current slice is the root, then the same split on each side |
 
 ---
 
@@ -245,3 +249,218 @@ public List<Double> averageOfLevels(TreeNode root) {
 ```
 
 Say in the interview: I take one level at a time by snapshotting the queue size, sum only those nodes, and let their children be the next level.
+
+---
+
+## LC 22 Generate Parentheses — coach-written, untimed
+
+https://leetcode.com/problems/generate-parentheses/
+
+### The problem
+
+`n` is how many pairs you must use.
+Return every string that uses exactly `n` pairs and is still valid.
+Order does not matter.
+
+```
+n = 2
+
+(())
+()()
+```
+
+`n = 3` has five strings: `((()))`, `(()())`, `(())()`, `()(())`, `()()()`.
+
+### The idea
+
+Pattern: backtracking.
+You keep one partial string, plus how many opens and how many closes you have used.
+You may add `(` while opens are still under `n`.
+You may add `)` only while closes are still under opens.
+When the string length is `2n`, it is one answer.
+Then you drop the last character and try the other choice.
+The number of answers is the Catalan count for `n`, and copying each string costs its length.
+Extra space is O(n) for the partial string and the call stack.
+The list of answers is the output.
+
+### How to solve it
+
+1. Start with an empty string, 0 opens, and 0 closes.
+2. If the string length is `2n`, save it and return.
+3. If opens are still under `n`, append `(`, recurse, then delete that character.
+4. If closes are still under opens, append `)`, recurse, then delete that character.
+
+Trace on `n = 2`:
+
+| so far | opens | closes | next |
+|---|---|---|---|
+| (empty) | 0 | 0 | `(` |
+| `(` | 1 | 0 | `(` |
+| `((` | 2 | 0 | `)` only |
+| `(()` | 2 | 1 | `)` |
+| `(())` | 2 | 2 | save |
+| `()` | 1 | 1 | `(` only |
+| `()(` | 2 | 1 | `)` |
+| `()()` | 2 | 2 | save |
+
+### Holes to patch
+
+**He did not know the name.**
+
+The gate stopped there.
+The rule he had to learn is the close count: `)` is legal only while closes are still under opens.
+Adding `)` whenever closes are under `n` writes `)(` for `n = 1`.
+That string uses one pair and is not valid.
+
+**Same undo as Monday.**
+
+Drop the last character after the recursive call.
+Leave it on and the next branch starts from a string that is already too long.
+
+### How it went
+
+He did not know the pattern and chose to stay and learn it.
+The clock never started.
+The coach wrote the method.
+3 of 3 tests passed.
+
+### Memorize this
+
+1. Keep one partial string, plus how many opens and closes you have used.
+2. If the string length is `2n`, save it and return.
+3. Add `(` while opens are still under `n`.
+4. Add `)` only while closes are still under opens.
+5. After each recursive call, delete the character you just added.
+
+```java
+public List<String> generateParenthesis(int n) {
+    List<String> answers = new ArrayList<>();
+    build(answers, new StringBuilder(), 0, 0, n);
+    return answers;
+}
+
+private void build(List<String> answers, StringBuilder partial, int opens, int closes, int n) {
+    if (partial.length() == 2 * n) {
+        answers.add(partial.toString());
+        return;
+    }
+    if (opens < n) {
+        partial.append('(');
+        build(answers, partial, opens + 1, closes, n);
+        partial.deleteCharAt(partial.length() - 1);
+    }
+    if (closes < opens) {
+        partial.append(')');
+        build(answers, partial, opens, closes + 1, n);
+        partial.deleteCharAt(partial.length() - 1);
+    }
+}
+```
+
+Say in the interview: I add an open while I still have pairs left, and a close only when it would match an open already in the string, then I undo that character.
+
+---
+
+## LC 108 Convert Sorted Array to Binary Search Tree — coach-written, untimed
+
+https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/
+
+### The problem
+
+`nums` is sorted ascending, and every value is unique.
+Build a height-balanced binary search tree from it.
+More than one shape is allowed.
+
+```
+-10  -3  0  5  9
+
+        0
+       / \
+     -3   9
+     /   /
+   -10  5
+```
+
+### The idea
+
+Pattern: the middle value of the current slice becomes the root.
+This is the Week 7 middle index on a sorted array.
+The new piece is that the middle value is a tree node, and the same split then runs on the values before it and the values after it.
+Taking the middle keeps both sides about the same height.
+There was no earlier lesson under the name divide and conquer.
+Time is O(n), because every value becomes a node.
+Extra space is O(log n) for the calls, because the tree is balanced.
+
+### How to solve it
+
+1. Keep the left end and the right end of the slice you are building.
+2. If `left > right`, the slice is empty, so that child is null.
+3. The middle index of this slice becomes the root.
+4. The left child is the same build on everything before the middle.
+5. The right child is the same build on everything after the middle.
+
+Trace on `[-10, -3, 0, 5, 9]`:
+
+| slice | middle | left slice | right slice |
+|---|---|---|---|
+| -10 -3 0 5 9 | 0 | -10 -3 | 5 9 |
+| -10 -3 | -3 | -10 | (empty) |
+| -10 | -10 | (empty) | (empty) |
+| 5 9 | 9 | 5 | (empty) |
+| 5 | 5 | (empty) | (empty) |
+
+When the slice has two values, `left + (right - left + 1) / 2` picks the right one.
+The usual `(right - left) / 2` picks the left one.
+Both trees are balanced.
+
+### Holes to patch
+
+**Heap, BFS, and intervals do not build this tree.**
+
+A heap keeps one extreme value on top while you insert.
+BFS walks a tree that is already there, one row at a time.
+An interval is a start and an end that you merge when they overlap.
+This array is single sorted values.
+The middle value of the current slice becomes the root.
+
+**The name was asked before the new piece was said.**
+
+He had never had a lesson called divide and conquer.
+The known move is the middle index from Week 7.
+The new piece is that this middle value is the root, then the same split runs on each side.
+
+### How it went
+
+He named heap, then BFS, then said he did not know, then named intervals.
+He chose to stay.
+The clock never started.
+The coach wrote the method.
+4 of 4 tests passed.
+
+### Memorize this
+
+1. Keep the left end and the right end of the slice.
+2. An empty slice returns null.
+3. The middle value of this slice is the root.
+4. Build the left child from everything before the middle.
+5. Build the right child from everything after the middle.
+6. A slice of two values may use either one as the root.
+
+```java
+public TreeNode sortedArrayToBST(int[] nums) {
+    return build(nums, 0, nums.length - 1);
+}
+
+private TreeNode build(int[] nums, int left, int right) {
+    if (left > right) {
+        return null;
+    }
+    int mid = left + (right - left + 1) / 2;
+    TreeNode root = new TreeNode(nums[mid]);
+    root.left = build(nums, left, mid - 1);
+    root.right = build(nums, mid + 1, right);
+    return root;
+}
+```
+
+Say in the interview: the array is already sorted, so the middle value is the root and the same split on each side keeps the tree short.
