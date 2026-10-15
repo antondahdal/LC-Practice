@@ -11,6 +11,8 @@ Monday's Easy is the Week 6 leftover, a level-order walk.
 | 108 | Convert Sorted Array to BST | Middle of a sorted slice becomes the root | O(n) / O(log n) | coach-written, untimed |
 | 46 | Permutations | Backtracking | O(n · n!) / O(n) besides the output | coach-written, untimed |
 | 392 | Is Subsequence | Two pointers | O(n) / O(1) | on-time |
+| 35 | Search Insert Position | Binary search | O(log n) / O(1) | on-time, equal-check hole, then fixed |
+| 34 | Find First and Last Position | Binary search, two cuts | O(log n) / O(1) | overtime, stopped, 6 of 8 |
 
 How to tell them apart:
 
@@ -22,6 +24,8 @@ How to tell them apart:
 | "Sorted array into a short BST" | Middle value of the current slice is the root, then the same split on each side |
 | "Every ordering of distinct numbers" | Backtracking, one unused number per slot, then undo |
 | "Is s a subsequence of t" | Two pointers, match moves s, every step moves t |
+| "Sorted array, return the index or the insert slot, O(log n)" | Binary search, return `low` when the target is missing |
+| "Sorted array, first and last index of the target, O(log n)" | Two binary searches, save a match and keep cutting toward that end |
 
 ---
 
@@ -724,3 +728,204 @@ Do not use that for the service that writes tickets.
 
 Say in the interview: `BookingService` is a singleton.
 A constructor loop between two beans fails startup.
+
+---
+
+## LC 35 Search Insert Position — on-time, equal-check hole, then fixed
+
+https://leetcode.com/problems/search-insert-position/
+
+### The problem
+
+You get a sorted array of distinct ints and a target.
+Return the index of the target, or the index where it would go to keep the array sorted.
+It must run in O(log n).
+`[1, 3, 5, 6]`, target `2` gives `1`.
+`[1, 3, 5, 6]`, target `7` gives `4`.
+
+### The idea
+
+Pattern: binary search.
+The array is sorted, so one look at the middle tells you which half the answer is in.
+You keep `low` and `high`.
+Everything left of `low` is smaller than the target.
+Everything right of `high` is bigger.
+When the loop ends, `low` is the insert slot.
+Time is O(log n).
+Extra space is O(1).
+
+### How to solve it
+
+1. `low = 0`, `high = n - 1`.
+2. While `low <= high`, `mid = low + (high - low) / 2`.
+3. One chain. Equal returns `mid`. Smaller moves `low` to `mid + 1`. Otherwise `high` becomes `mid - 1`.
+4. Not found: return `low`.
+
+| low | high | mid | nums[mid] | target 2 |
+|---|---|---|---|---|
+| 0 | 3 | 1 | 3 | 3 is bigger, `high = 0` |
+| 0 | 0 | 0 | 1 | 1 is smaller, `low = 1` |
+| 1 | 0 | — | — | return `low` = 1 |
+
+### Holes to patch
+
+**Comparing the index to the target.**
+`if (mid == target) return mid` compares the slot number, not the value.
+`[1, 3, 5, 6]`, target `1`.
+`mid` becomes `1`, and `1 == 1`, so it returns `1`.
+The value at index `1` is `3`.
+The `1` sits at index `0`.
+Rule: compare `nums[mid]` to the target, then return `mid`.
+
+```java
+if (nums[mid] == target) return mid;
+```
+
+The suite was green before that line changed.
+No test had the index equal the target while the value was different.
+
+### How it went
+
+On-time.
+7 of 7.
+The equal check used the index.
+The line was changed to `nums[mid]` after that.
+
+### Memorize this
+
+1. `low = 0`, `high = n - 1`, loop while `low <= high`.
+2. `mid = low + (high - low) / 2`.
+3. One chain: equal returns, less moves `low` to `mid + 1`, else `high` becomes `mid - 1`.
+4. Not found: return `low`.
+
+```java
+public int searchInsert(int[] nums, int target) {
+    int low = 0;
+    int high = nums.length - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (nums[mid] == target) return mid;
+        else if (nums[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return low;
+}
+```
+
+Say in the interview: it is a binary search, and when the target is missing `low` is the first index bigger than the target, which is the insert slot.
+
+---
+
+## LC 34 Find First and Last Position of Element in Sorted Array — overtime, stopped
+
+https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/
+
+### The problem
+
+You get a sorted array and a target.
+Return the first index and the last index of that target.
+If it is missing, return `[-1, -1]`.
+It must run in O(log n).
+
+```
+index:  0  1  2  3  4  5
+value:  5  7  7  8  8  10
+```
+
+Target `8` gives `[3, 4]`.
+Target `6` gives `[-1, -1]`.
+
+### The idea
+
+Pattern: binary search, run twice.
+One cut hunts the left end.
+One cut hunts the right end.
+On a match you save `mid` and keep cutting toward the end you still need.
+A walk from the match until the run ends is O(n) when every value is the target.
+Time is O(log n).
+Extra space is O(1).
+
+### How to solve it
+
+1. Left cut. On a match, save `mid`, then `high = mid - 1`.
+2. Right cut. On a match, save `mid`, then `low = mid + 1`.
+3. A smaller middle moves `low` up.
+4. A bigger middle moves `high` down.
+5. If you never saved an index, both ends are `-1`.
+
+Left cut on `[5, 7, 7, 8, 8, 10]`, target `8`:
+
+| low | high | mid | nums[mid] | saved |
+|---|---|---|---|---|
+| 0 | 5 | 2 | 7 | 7 is smaller, `low = 3` |
+| 3 | 5 | 4 | 8 | save `4`, cut left, `high = 3` |
+| 3 | 3 | 3 | 8 | save `3`, cut left, `high = 2` |
+| 3 | 2 | — | — | left end is `3` |
+
+### Holes to patch
+
+**A match writes an index only when a neighbor is also the target.**
+The lone match never stores `mid`.
+`[5, 7, 7, 8, 8, 10]`, target `5`.
+`mid` lands on index `0`.
+Neither neighbor is `5`.
+Both slots stay `-1`.
+The answer is `[0, 0]`.
+Rule: a match stores `mid` in both slots, then a neighbor only widens that range.
+
+**`mid - 1 > 0` skips index `0`.**
+The left neighbor at index `0` fails `> 0`.
+`[8, 8, 8, 8]`, `mid` is `1`.
+The `8` at index `0` is never seen.
+The first index is stored as `1`.
+The answer is `[0, 3]`.
+Rule: the left neighbor exists when `mid - 1 >= 0`.
+
+```java
+if (mid - 1 >= 0 && nums[mid - 1] == target)
+```
+
+**The second loops walk the run.**
+On a full array of the target, that walk is O(n).
+Rule: save the match and keep cutting. Do not scan sideways.
+
+### How it went
+
+Overtime.
+Stopped with 6 of 8 green.
+The two red cases are the lone `5` at index `0`, and the array of all `8`s.
+
+### Memorize this
+
+1. Same cut as Search Insert. Run it twice.
+2. Left run: on a match, save `mid`, then `high = mid - 1`.
+3. Right run: on a match, save `mid`, then `low = mid + 1`.
+4. Smaller middle moves `low` up. Bigger middle moves `high` down.
+5. Nothing saved: both ends are `-1`.
+
+```java
+public int[] searchRange(int[] nums, int target) {
+    int[] ans = new int[] {-1, -1};
+    if (nums == null || nums.length == 0) return ans;
+    ans[0] = bound(nums, target, true);
+    if (ans[0] == -1) return ans;
+    ans[1] = bound(nums, target, false);
+    return ans;
+}
+
+private int bound(int[] nums, int target, boolean left) {
+    int low = 0, high = nums.length - 1, saved = -1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (nums[mid] == target) {
+            saved = mid;
+            if (left) high = mid - 1;
+            else low = mid + 1;
+        } else if (nums[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return saved;
+}
+```
+
+Say in the interview: I binary-search twice, once for the left end and once for the right end, and a match does not stop the cut.
