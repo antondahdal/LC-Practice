@@ -145,6 +145,10 @@ The loop is right. Line 31 calls `expireHold`.
 The load is not status `EXPIRED`. Line 27 is `findByStatusAndExpiresAtBefore(HoldStatus.HELD, LocalDateTime.now())`: still `HELD`, and `expiresAt` is already past.
 Line: the job loads holds that are still `HELD` and past their time, then `expireHold` marks them `EXPIRED` and puts the seats back.
 
-He stopped Part 2 here. The gate question was too far for today. Do not continue it in this session.
+Piece 14 closed on 2026-10-26. `tryConsume` false sets 429. He first said `chain.doFilter` still runs, then corrected it. Line 44 returns.
+Piece 15 closed. A `RuntimeException` from `tryConsume` sets 503 and returns. Booking is not called.
+Piece 16 closed. No token: `"ip:"` plus the remote address. A bearer token is not the key. `subjectOf` reads `sub`, and the key is `"user:"` plus that claim.
+Piece 17 closed. `REDIS_URL` is `RedisTokenBucket`. No Redis host is `InMemoryTokenBucket`. A second in-memory process still allows the Book. Redis is the shared count.
 
-Next time, if he wants to resume: `gateway/src/main/java/com/eventbooking/gateway/BookRateLimitFilter.java`, method `doFilterInternal`. When `tryConsume` returns false, what status is set, and does `chain.doFilter` run? He has not answered it.
+Wrapped 2026-10-26. Also closed: 5 tokens, one back every 15 seconds. `book()` borrows no connection during the HTTP calls. Same tap in the `catch` returns the first ticket with 201. `publishEvent` runs `EventIdPublisher` after commit, prints the ticket id, marks `NOTIFY` sent. Expired confirm cancels the ticket. `EventClient.confirmHold` posts `/api/events/holds/{holdId}/confirm` with `X-Internal-Token`.
+Resume: `EventController` for that post. Then `confirmHold`. Then the 10-minute hold. Questions stay to one ask.
