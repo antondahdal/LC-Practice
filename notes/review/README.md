@@ -14,6 +14,7 @@ Each problem has: the problem, the idea, how to solve it with a small trace, hol
 | 8 | Graph, DP classics, design (LRU) | [week-08.md](week-08.md) |
 | 9 | Backtracking, trie, level-order leftover | [week-09.md](week-09.md) |
 | 10 | Redo plus one fresh problem a day | [week-10.md](week-10.md) |
+| 11 | Redo plus one fresh problem a day | [week-11.md](week-11.md) |
 
 The clock only started in Week 5 Day 4.
 Weeks 3 and 4 and early Week 5 say "passed (no clock)" instead of on-time or overtime.
