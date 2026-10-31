@@ -21,8 +21,8 @@ public class TwoSumII {
         for(int i=0;i<=numbers.length-1;i++){
 
             if( map.containsKey(target-numbers[i])){
-                retInt[0]=i;
-                retInt[1]=map.get(target-numbers[i]) ;
+                retInt[0]=map.get(target-numbers[i]);
+                retInt[1]=i ;
                 return retInt;
             }
             else{
