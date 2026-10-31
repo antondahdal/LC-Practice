@@ -20,5 +20,8 @@
     "*": false
   },
   "java.completion.enabled": true,
-  "cursor.cpp.disabledLanguages": ["java"]
+  "cursor.cpp.disabledLanguages": [
+    "java"
+  ],
+  "java.debug.settings.onBuildFailureProceed": true
 }

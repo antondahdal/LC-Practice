@@ -4,15 +4,17 @@ Java only. The screen is Thursday 5 November 2026 at 13:00. Tomorrow, Saturday 3
 
 ## Study checklist
 
-- [ ] CV story, 10 minutes. What you own now at Amdocs, in Java, and for how many years.
+- [x] CV story, 10 minutes. What you own now at Amdocs, in Java, and for how many years. Closed Friday 30 October. Arabic first, then English.
 - [ ] Job line match, 10 minutes. One requirement, then the CV line that answers it.
 - [ ] Linux, 5 minutes. Process versus thread. Where a log is. One machine red and the rest green.
 - [ ] Network, 5 minutes. IP versus port. TCP versus UDP. A drop shows up as a timeout.
 - [ ] Unique values with a `HashSet`. `["CPP", "PYTHON", "JAVA", "JAVA", "CPP"]` prints `[CPP, PYTHON, JAVA]`.
 - [ ] Easy, already in this folder. Valid Anagram. Remove Duplicates from Sorted Array.
-- [ ] Medium for tomorrow. Rotate Array, then Longest Substring Without Repeating Characters.
+- [ ] Extra pair today. Both mediums, 25 minutes each. Rotate Array, then Longest Substring Without Repeating Characters. Rotate Array is in progress.
 
 ## CV story
+
+Closed Friday 30 October. Arabic first, then the same story in English.
 
 Backend Java engineer at Amdocs, 2021 to now. About five years on telecom billing and payment systems.
 
@@ -130,7 +132,7 @@ No package declaration. File: `CV prep/RemoveDuplicates.java`.
 
 ## Medium problems
 
-These are the mediums already named for this screen. Tomorrow is the first pair.
+These are the mediums already named for this screen. Saturday 31 October is this pair. Rotate Array is in progress.
 
 | When | Problem | Link |
 |---|---|---|
